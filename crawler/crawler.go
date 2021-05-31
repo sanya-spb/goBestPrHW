@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"sync"
-	"time"
+
+	"github.com/pkg/errors"
 )
 
 type crawlResult struct {
@@ -26,10 +26,14 @@ func newCrawler(maxDepth int) *crawler {
 	}
 }
 
+func (c *crawler) AddMaxDepth(count int) {
+	c.maxDepth += count
+}
+
 // рекурсивно сканируем страницы
 func (c *crawler) run(ctx context.Context, url string, results chan<- crawlResult, depth int) {
 	// просто для того, чтобы успевать следить за выводом программы, можно убрать :)
-	time.Sleep(2 * time.Second)
+	// time.Sleep(2 * time.Second) ИМХО не так надо..
 
 	// проверяем что контекст исполнения актуален
 	select {

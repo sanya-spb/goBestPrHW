@@ -24,6 +24,9 @@ var (
 
 	// насколько глубоко нам надо смотреть (например, 10)
 	depthLimit int
+
+	// глобальный timeout (в сек)
+	maxWorkTime int
 )
 
 // Как вы помните, функция инициализации стартует первой
@@ -31,6 +34,7 @@ func init() {
 	// задаём и парсим флаги
 	flag.StringVar(&url, "url", "", "url address")
 	flag.IntVar(&depthLimit, "depth", 3, "max depth for run")
+	flag.IntVar(&maxWorkTime, "max-work-time", 0, "max working time, 0 - infinity")
 	flag.Parse()
 
 	// Проверяем обязательное условие
@@ -44,11 +48,18 @@ func init() {
 func main() {
 	started := time.Now()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	go watchSignals(cancel)
-	defer cancel()
-
+	// задаем время жизни
+	var ctx context.Context
+	var cancel context.CancelFunc
+	if maxWorkTime == 0 {
+		ctx, cancel = context.WithCancel(context.Background())
+	} else {
+		ctx, cancel = context.WithTimeout(context.Background(), time.Duration(maxWorkTime)*time.Second)
+	}
 	crawler := newCrawler(depthLimit)
+
+	go watchSignals(ctx, cancel, crawler)
+	defer cancel()
 
 	// создаём канал для результатов
 	results := make(chan crawlResult)
@@ -66,27 +77,46 @@ func main() {
 	log.Println(time.Since(started))
 }
 
-// ловим сигналы выключения
-func watchSignals(cancel context.CancelFunc) {
-	osSignalChan := make(chan os.Signal)
+// ловим сигналы выключения и управления
+func watchSignals(ctx context.Context, cancel context.CancelFunc, c *crawler) {
+	osSignalChanEXIT := make(chan os.Signal)
+	osSignalChanUSR1 := make(chan os.Signal)
 
-	signal.Notify(osSignalChan,
+	signal.Notify(osSignalChanEXIT,
 		syscall.SIGINT,
 		syscall.SIGTERM)
+	signal.Notify(osSignalChanUSR1,
+		syscall.SIGUSR1)
 
-	sig := <-osSignalChan
-	log.Printf("got signal %q", sig.String())
-
-	// если сигнал получен, отменяем контекст работы
-	cancel()
+exit:
+	for {
+		select {
+		case <-ctx.Done():
+			log.Println("time is out")
+			break exit
+		case <-osSignalChanEXIT:
+			log.Println("exit by user")
+			cancel()
+			break exit
+		case <-osSignalChanUSR1:
+			log.Println("dept +2")
+			depthLimit += 2
+			c.AddMaxDepth(2)
+		}
+	}
 }
 
 func watchCrawler(ctx context.Context, results <-chan crawlResult, maxErrors, maxResults int) chan struct{} {
 	readersDone := make(chan struct{})
 
+	// time.Sleep(500 * time.Millisecond)
+
 	go func() {
 		defer close(readersDone)
 		for {
+			// такое замедление дает шанс что нас не забанят, + успеваем смотреть на вывод
+			time.Sleep(700 * time.Millisecond)
+
 			select {
 			case <-ctx.Done():
 				return
