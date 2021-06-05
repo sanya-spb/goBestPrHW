@@ -15,8 +15,9 @@ type crawlResult struct {
 
 type crawler struct {
 	sync.Mutex
-	visited  map[string]string
-	maxDepth int
+	visited    map[string]string
+	maxDepth   int
+	maxDepthMu sync.RWMutex
 }
 
 func newCrawler(maxDepth int) *crawler {
@@ -27,7 +28,15 @@ func newCrawler(maxDepth int) *crawler {
 }
 
 func (c *crawler) AddMaxDepth(count int) {
+	c.maxDepthMu.Lock()
+	defer c.maxDepthMu.Unlock()
 	c.maxDepth += count
+}
+
+func (c *crawler) GetMaxDepth() int {
+	c.maxDepthMu.RLock()
+	defer c.maxDepthMu.RUnlock()
+	return c.maxDepth
 }
 
 // рекурсивно сканируем страницы
@@ -42,7 +51,7 @@ func (c *crawler) run(ctx context.Context, url string, results chan<- crawlResul
 
 	default:
 		// проверка глубины
-		if depth >= c.maxDepth {
+		if depth >= c.GetMaxDepth() {
 			return
 		}
 

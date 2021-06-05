@@ -2,22 +2,31 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/net/html"
 	"net/http"
+	"time"
+
+	"golang.org/x/net/html"
 )
 
 // парсим страницу
 func parse(url string) (*html.Node, error) {
 	// что здесь должно быть вместо http.Get? :)
-	r, err := http.Get(url)
-	if err != nil {
+	// r, err := http.Get(url)
+	client := http.Client{
+		Timeout: 5 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	if r, err := client.Get(url); err != nil {
 		return nil, fmt.Errorf("can't get page")
+	} else {
+		if b, err := html.Parse(r.Body); err != nil {
+			return nil, fmt.Errorf("can't parse page")
+		} else {
+			return b, err
+		}
 	}
-	b, err := html.Parse(r.Body)
-	if err != nil {
-		return nil, fmt.Errorf("can't parse page")
-	}
-	return b, err
 }
 
 // ищем заголовок на странице
