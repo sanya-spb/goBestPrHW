@@ -11,8 +11,8 @@ import (
 //:TODO turn exclude checking size
 //:TODO turn case crc method
 type Config struct {
-	// Debug bool
-	Dirs []string
+	Debug bool
+	Dirs  []string
 	// Hash  string
 	// MaxSize uint64
 	DFactor uint64
@@ -24,7 +24,7 @@ type Config struct {
 func NewConfig() *Config {
 	var result *Config = new(Config)
 
-	// flag.BoolVar(&result.Debug, "debug", GetEnvBool("DEBUG", false), "Output verbose debug information")
+	flag.BoolVar(&result.Debug, "debug", GetEnvBool("DEBUG", false), "Output verbose debug information")
 	// flag.StringVar(&result.Dirs, "dirs", GetEnv("DIR", "./"), "Path to scan files to doubles, default current directory")
 	// flag.StringVar(&result.Hash, "hash", GetEnv("HASH", "md5"), "HASH method: [md5, crc32], default md5")
 	// flag.Uint64Var(&result.MaxSize, "max-size", GetEnvUInt("MAX_SIZE", 0), "limit maximum file size for checking, 0 - disable")

@@ -23,7 +23,7 @@ build:
 
 ## run: Run application
 run: 
-	go run .
+	go run . -debug ./
 
 ## clean: Clean build files
 clean:
