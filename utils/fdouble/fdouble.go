@@ -89,7 +89,7 @@ func ScanDir(dir string, n *sync.WaitGroup, fileInfo chan<- FDescr, ll *logrus.L
 			go ScanDir(subdir, n, fileInfo, ll)
 
 			// Panic for task 4
-			panic(SubDir{pathFrom: dir, pathTo: subdir})
+			// panic(SubDir{pathFrom: dir, pathTo: subdir})
 		} else if entry.Mode().IsRegular() {
 			fileInfo <- FDescr{
 				path: dir + string(filepath.Separator) + entry.Name(),
