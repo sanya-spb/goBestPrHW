@@ -1,9 +1,6 @@
 package fdouble
 
 import (
-	"crypto/sha256"
-	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -87,6 +84,7 @@ func ScanDir(dir string, n *sync.WaitGroup, fileInfo chan<- FDescr, fs fsys.FS, 
 				"DirFrom": dir,
 				"DirTo":   subdir,
 			}).Debug("sub Dir")
+
 			go ScanDir(subdir, n, fileInfo, fs, ll)
 
 			// Panic for task 4
@@ -94,25 +92,7 @@ func ScanDir(dir string, n *sync.WaitGroup, fileInfo chan<- FDescr, fs fsys.FS, 
 		} else if entry.Mode().IsRegular() {
 			fileInfo <- FDescr{
 				path: dir + string(filepath.Separator) + entry.Name(),
-				hash: func(fPath string) string {
-					content, err := os.Open(fPath)
-					if err != nil {
-						// fmt.Fprintf(os.Stderr, "%v\n", err)
-						ll.WithFields(logrus.Fields{
-							"fPath": fPath,
-						}).Error(err.Error())
-					} else {
-						hash := sha256.New()
-						if _, err := io.Copy(hash, content); err != nil {
-							fmt.Fprintf(os.Stderr, "%v\n", err)
-							ll.WithFields(logrus.Fields{
-								"fPath": fPath,
-							}).Error(err.Error())
-						}
-						return fmt.Sprintf("%x", hash.Sum(nil))
-					}
-					return ""
-				}(dir + string(filepath.Separator) + entry.Name()),
+				hash: fs.CalcHash(dir + string(filepath.Separator) + entry.Name()),
 				size: uint64(entry.Size()),
 			}
 		}
