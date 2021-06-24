@@ -9,6 +9,7 @@ import (
 
 	"github.com/sanya-spb/goBestPrHW/utils/config"
 	"github.com/sanya-spb/goBestPrHW/utils/fdouble"
+	"github.com/sanya-spb/goBestPrHW/utils/fsys"
 	"github.com/sanya-spb/goBestPrHW/utils/version"
 
 	"github.com/sirupsen/logrus"
@@ -60,10 +61,13 @@ func main() {
 	// Traverse each root of the file tree in parallel.
 	fileHashesCh := make(chan fdouble.FDescr)
 	// subDirCh := make(chan fdouble.SubDir)
+
+	fs := &fsys.FSImpl{}
+
 	var n sync.WaitGroup
 	for _, root := range MyApp.Config.Dirs {
 		n.Add(1)
-		go fdouble.ScanDir(strings.TrimRight(root, string(filepath.Separator)), &n, fileHashesCh, MyApp.logrus)
+		go fdouble.ScanDir(strings.TrimRight(root, string(filepath.Separator)), &n, fileHashesCh, fs, MyApp.logrus)
 	}
 	go func() {
 		n.Wait()

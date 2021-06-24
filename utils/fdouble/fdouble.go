@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/sanya-spb/goBestPrHW/utils/fsys"
 	"github.com/sirupsen/logrus"
 )
 
@@ -54,7 +55,7 @@ func cancelled() bool {
 }
 
 // ScanDir recursively walks the file tree and sends the fDescr of each found file.
-func ScanDir(dir string, n *sync.WaitGroup, fileInfo chan<- FDescr, ll *logrus.Logger) {
+func ScanDir(dir string, n *sync.WaitGroup, fileInfo chan<- FDescr, fs fsys.FS, ll *logrus.Logger) {
 	defer n.Done()
 
 	// hook for panic in task 4
@@ -77,7 +78,7 @@ func ScanDir(dir string, n *sync.WaitGroup, fileInfo chan<- FDescr, ll *logrus.L
 	if cancelled() {
 		return
 	}
-	for _, entry := range readDir(dir, ll) {
+	for _, entry := range readDir(dir, ll, fs) {
 		if entry.IsDir() {
 			// fmt.Fprintf(os.Stdout, "DIR: %s\n", entry.Name())
 			n.Add(1)
@@ -86,7 +87,7 @@ func ScanDir(dir string, n *sync.WaitGroup, fileInfo chan<- FDescr, ll *logrus.L
 				"DirFrom": dir,
 				"DirTo":   subdir,
 			}).Debug("sub Dir")
-			go ScanDir(subdir, n, fileInfo, ll)
+			go ScanDir(subdir, n, fileInfo, fs, ll)
 
 			// Panic for task 4
 			// panic(SubDir{pathFrom: dir, pathTo: subdir})
@@ -122,7 +123,7 @@ func ScanDir(dir string, n *sync.WaitGroup, fileInfo chan<- FDescr, ll *logrus.L
 var sema = make(chan struct{}, 20) // concurrency-limiting counting semaphore
 
 // readDir returns the entries of directory dir.
-func readDir(dir string, ll *logrus.Logger) []os.FileInfo {
+func readDir(dir string, ll *logrus.Logger, fs fsys.FS) []os.FileInfo {
 	select {
 	case sema <- struct{}{}: // acquire token
 	case <-Done:
@@ -130,23 +131,7 @@ func readDir(dir string, ll *logrus.Logger) []os.FileInfo {
 	}
 	defer func() { <-sema }() // release token
 
-	f, err := os.Open(dir)
-	if err != nil {
-		// fmt.Fprintf(os.Stderr, "%v\n", err)
-		ll.WithFields(logrus.Fields{
-			"fPath": dir,
-		}).Error(err.Error())
-		return nil
-	}
-	defer f.Close()
+	entities, _ := fs.GetAllFiles(dir)
 
-	entries, err := f.Readdir(0) // 0 => no limit; read all entries
-	if err != nil {
-		// fmt.Fprintf(os.Stderr, "%v\n", err)
-		ll.WithFields(logrus.Fields{
-			"fPath": dir,
-		}).Error(err.Error())
-		// Don't return: Readdir may return partial results.
-	}
-	return entries
+	return entities
 }
