@@ -32,8 +32,8 @@ clean:
 
 ## test: Run autotest
 test:
-	# go test -v ${PROJECT}/utils/config/
-	go test -v
+	go test -v ${PROJECT}/utils/fdouble/
+	# go test -v
 
 ## help: Show this
 help: Makefile
