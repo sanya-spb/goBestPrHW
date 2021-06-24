@@ -30,10 +30,13 @@ clean:
 	go clean
 	rm $(EXE_FILE)
 
-## test: Run autotest
+## test: Run unit test
 test:
-	go test -v ${PROJECT}/utils/fdouble/
-	# go test -v
+	go test -v -short ${PROJECT}/utils/fdouble/
+
+## integration: Run integration test
+integration:
+	go test -v -run Integration ${PROJECT}/utils/fdouble/
 
 ## help: Show this
 help: Makefile

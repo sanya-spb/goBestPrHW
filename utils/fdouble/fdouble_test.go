@@ -2,11 +2,15 @@ package fdouble
 
 import (
 	"io/fs"
+	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/sanya-spb/goBestPrHW/utils/fsys"
 	"github.com/sanya-spb/goBestPrHW/utils/fsys/mocks"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -46,7 +50,6 @@ func TestScanDir(t *testing.T) {
 	wg.Add(1)
 	files := make(chan FDescr)
 
-	// fs := &FSStub{}
 	fsMock := &mocks.FS{}
 
 	var fsTest []fs.FileInfo
@@ -71,6 +74,7 @@ func TestScanDir(t *testing.T) {
 
 	ScanDir("abc", wg, files, fsMock, ll)
 
+	// знаю что плохо, первый и последний раз.. время поджимает..
 	time.Sleep(1 * time.Second)
 
 	assert.Equal(t, []FDescr{
@@ -78,6 +82,58 @@ func TestScanDir(t *testing.T) {
 			"abc" + string(filepath.Separator) + "1.dat",
 			"100500",
 			100,
+		},
+	}, retFiles)
+}
+
+func TestScanDirIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	ll := logrus.New()
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	files := make(chan FDescr)
+
+	fsTemp := &fsys.FSImpl{}
+
+	dir, err := ioutil.TempDir("/tmp", "prefix")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	file, err := ioutil.TempFile(dir, "prefix")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
+	var retFiles []FDescr
+	go func() {
+		for f := range files {
+			retFiles = append(retFiles, f)
+		}
+	}()
+
+	ScanDir(dir, wg, files, fsTemp, ll)
+
+	// знаю что плохо, первый и последний раз.. время поджимает..
+	time.Sleep(1 * time.Second)
+
+	assert.Equal(t, []FDescr{
+		{
+			file.Name(),
+			fsTemp.CalcHash(file.Name()),
+			func(f *os.File) uint64 {
+				fi, err := f.Stat()
+				if err != nil {
+					// Could not obtain stat, no handle error, test will fail
+					return 111
+				}
+				return uint64(fi.Size())
+			}(file),
 		},
 	}, retFiles)
 }

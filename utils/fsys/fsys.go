@@ -11,6 +11,7 @@ import (
 type FS interface {
 	GetAllFiles(dir string) ([]fs.FileInfo, error)
 	CalcHash(path string) string
+	// CalcSize(path string) uint64
 }
 
 type FSImpl struct {
@@ -33,7 +34,7 @@ func (fs FSImpl) GetAllFiles(dir string) ([]fs.FileInfo, error) {
 func (fs FSImpl) CalcHash(path string) string {
 	content, err := os.Open(path)
 	if err != nil {
-
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 	} else {
 		hash := sha256.New()
 		if _, err := io.Copy(hash, content); err != nil {
@@ -43,3 +44,7 @@ func (fs FSImpl) CalcHash(path string) string {
 	}
 	return ""
 }
+
+// func (fs FSImpl) CalcSize(path string) uint64 {
+
+// }
