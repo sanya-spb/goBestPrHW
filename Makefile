@@ -5,7 +5,7 @@ GOOS?=linux
 GOARCH?=amd64
 
 CGO_ENABLED=1
-EXE_FILE=app_main
+EXE_FILE=csv-searcher
 
 RELEASE := $(shell git tag -l | tail -1 | grep -E "v.+"|| echo devel)
 COMMIT := git-$(shell git rev-parse --short HEAD)
@@ -15,20 +15,21 @@ COPYRIGHT := "sanya-spb"
 ## build: Build application
 build:
 	GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=$(CGO_ENABLED) go build \
-		-ldflags "-s -w -X ${PROJECT}/utils/version.version=${RELEASE} \
-		-X ${PROJECT}/utils/version.commit=${COMMIT} \
-		-X ${PROJECT}/utils/version.buildTime=${BUILD_TIME} \
-		-X ${PROJECT}/utils/version.copyright=${COPYRIGHT}" \
-		-o ${EXE_FILE} main.go
+		-ldflags "-s -w \
+		-X ${PROJECT}/pkg_tools/version.version=${RELEASE} \
+		-X ${PROJECT}/pkg_tools/version.commit=${COMMIT} \
+		-X ${PROJECT}/pkg_tools/version.buildTime=${BUILD_TIME} \
+		-X ${PROJECT}/pkg_tools/version.copyright=${COPYRIGHT}" \
+		-o ./cmd/csv-searcher/${EXE_FILE} ./cmd/csv-searcher/
 
 ## run: Run application
 run: 
-	go run . -debug ./
+	go run ./cmd/csv-searcher/
 
 ## clean: Clean build files
 clean:
 	go clean
-	rm $(EXE_FILE)
+	rm ./cmd/csv-searcher/${EXE_FILE}
 
 ## test: Run unit test
 test:
