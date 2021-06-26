@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sanya-spb/goBestPrHW/pkg_tools/config"
-	"github.com/sanya-spb/goBestPrHW/pkg_tools/version"
+	"github.com/sanya-spb/goBestPrHW/internal/config"
+	"github.com/sanya-spb/goBestPrHW/pkg/version"
 )
 
 type App struct {
