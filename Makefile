@@ -5,7 +5,7 @@ GOOS?=linux
 GOARCH?=amd64
 
 CGO_ENABLED=1
-EXE_FILE=app_main
+EXE_FILE=dub_search
 
 RELEASE := $(shell git tag -l | tail -1 | grep -E "v.+"|| echo devel)
 COMMIT := git-$(shell git rev-parse --short HEAD)
@@ -15,25 +15,21 @@ COPYRIGHT := "sanya-spb"
 ## build: Build application
 build:
 	GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=$(CGO_ENABLED) go build \
-		-ldflags "-s -w -X ${PROJECT}/utils/version.version=${RELEASE} \
-		-X ${PROJECT}/utils/version.commit=${COMMIT} \
-		-X ${PROJECT}/utils/version.buildTime=${BUILD_TIME} \
-		-X ${PROJECT}/utils/version.copyright=${COPYRIGHT}" \
-		-o ${EXE_FILE} main.go
+		-ldflags "-s -w \
+		-X ${PROJECT}/pkg/version.version=${RELEASE} \
+		-X ${PROJECT}/pkg/version.commit=${COMMIT} \
+		-X ${PROJECT}/pkg/version.buildTime=${BUILD_TIME} \
+		-X ${PROJECT}/pkg/version.copyright=${COPYRIGHT}" \
+		-o ./cmd/dub_search/${EXE_FILE} ./cmd/dub_search/
 
 ## run: Run application
 run: 
-	go run . -debug ./
+	go run ./cmd/dub_search/
 
 ## clean: Clean build files
 clean:
 	go clean
-	rm $(EXE_FILE)
-
-## test: Run autotest
-test:
-	# go test -v ${PROJECT}/utils/config/
-	go test -v
+	rm ./cmd/dub_search/$(EXE_FILE)
 
 ## help: Show this
 help: Makefile

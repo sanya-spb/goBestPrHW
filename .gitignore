@@ -14,6 +14,6 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-app_main
+/cmd/dub_search/dub_search
 goLev2HW
 launch.json

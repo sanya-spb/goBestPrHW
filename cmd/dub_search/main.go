@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sanya-spb/goBestPrHW/utils/config"
-	"github.com/sanya-spb/goBestPrHW/utils/fdouble"
-	"github.com/sanya-spb/goBestPrHW/utils/version"
+	"github.com/sanya-spb/goBestPrHW/internal/config"
+	"github.com/sanya-spb/goBestPrHW/internal/fdouble"
+	"github.com/sanya-spb/goBestPrHW/pkg/version"
 
 	"github.com/sirupsen/logrus"
 )
