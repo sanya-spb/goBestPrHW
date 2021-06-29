@@ -31,6 +31,10 @@ clean:
 	go clean
 	rm ./cmd/dub_search/$(EXE_FILE)
 
+## linter: Run linters
+linter:
+	golangci-lint -c ./golangci-lint.yaml run
+
 ## help: Show this
 help: Makefile
 	@echo " Choose a command run in "$(PROJECTNAME)":"

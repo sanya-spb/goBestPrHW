@@ -20,9 +20,8 @@ type APP struct {
 	logrus  *logrus.Logger
 }
 
-var MyApp *APP = new(APP)
-
 func main() {
+	var MyApp *APP = new(APP)
 	MyApp.logrus = logrus.New()
 	MyApp.logrus.Formatter = new(logrus.TextFormatter)
 	MyApp.logrus.Formatter.(*logrus.TextFormatter).DisableTimestamp = true
