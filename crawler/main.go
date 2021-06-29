@@ -79,8 +79,10 @@ func main() {
 
 // ловим сигналы выключения и управления
 func watchSignals(ctx context.Context, cancel context.CancelFunc, c *crawler) {
-	osSignalChanEXIT := make(chan os.Signal)
-	osSignalChanUSR1 := make(chan os.Signal)
+	// linter:
+	// main.go:85:2: sigchanyzer: misuse of unbuffered os.Signal channel as argument to signal.Notify (govet)
+	osSignalChanEXIT := make(chan os.Signal, 1)
+	osSignalChanUSR1 := make(chan os.Signal, 1)
 
 	signal.Notify(osSignalChanEXIT,
 		syscall.SIGINT,
