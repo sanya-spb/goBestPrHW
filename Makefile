@@ -23,7 +23,7 @@ build:
 		-o ./cmd/dub_search/${EXE_FILE} ./cmd/dub_search/
 
 ## run: Run application
-run: 
+run:
 	go run ./cmd/dub_search/
 
 ## clean: Clean build files
