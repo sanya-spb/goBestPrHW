@@ -52,7 +52,7 @@ func main() {
 
 	// Cancel traversal when input is detected.
 	go func() {
-		os.Stdin.Read(make([]byte, 1)) // read a single byte
+		_, _ = os.Stdin.Read(make([]byte, 1)) // read a single byte
 		close(fdouble.Done)
 	}()
 
