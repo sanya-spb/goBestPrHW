@@ -6,7 +6,7 @@
 
 ## Решение
 
-1.
+### Задание 1
 ```
 └─$ make help
  Choose a command run in goBestPrHW:
@@ -30,7 +30,7 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build \
 go clean
 rm ./cmd/dub_search/dub_search
 ```
-1.
+### Задание 2
 ```
 └─$ pre-commit run --all-files
 [WARNING] The 'rev' field of repo 'https://github.com/dnephin/pre-commit-golang' appears to be a mutable reference (moving tag / branch).  Mutable references are never updated after first install and are not supported.  See https://pre-commit.com/#using-the-latest-version-for-a-repository for more details.
@@ -41,3 +41,4 @@ go imports...............................................................Passed
 golangci-lint............................................................Passed
 go-unit-tests............................................................Passed
 ```
+### Задание 3
