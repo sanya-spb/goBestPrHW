@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/sanya-spb/goBestPrHW/internal/config"
@@ -39,6 +40,15 @@ func (app *App) loadDataFile(path string) error {
 	return nil
 }
 
+func (app *App) getExecPath() (exPath string, err error) {
+	ex, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	exPath = filepath.Dir(ex)
+	return exPath, nil
+}
+
 func (app *App) runCommand(commandStr string) error {
 	commandStr = strings.TrimSuffix(commandStr, "\n")
 	arrCommandStr := strings.Fields(commandStr)
@@ -69,7 +79,12 @@ func main() {
 	// Init our app
 	app := newApp()
 
-	fmt.Fprintf(os.Stderr, "%v\n", app)
+	if exPath, err := app.getExecPath(); err != nil {
+
+	} else {
+		fmt.Fprintf(os.Stderr, "Welcome to csv-searcher!\nWorking directory: %s\nVersion: %+v\n\n", exPath, app.Version.Version)
+	}
+	// fmt.Fprintf(os.Stderr, "%v\n", app)
 
 	if app.Config.BatchMode {
 		if err := app.checkConfig(); err != nil {
