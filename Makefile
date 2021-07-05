@@ -37,7 +37,7 @@ clean:
 
 ## test: Run unit test
 test:
-	go test -v -short ${PROJECT}/utils/fdouble/
+	go test -v -short ${PROJECT}/cmd/csv-searcher/
 
 ## integration: Run integration test
 integration:
