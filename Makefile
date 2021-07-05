@@ -27,7 +27,7 @@ check:
 	golangci-lint -c ./golangci-lint.yaml run
 
 ## run: Run application
-run: 
+run:
 	go run ./cmd/csv-searcher/
 
 ## clean: Clean build files
