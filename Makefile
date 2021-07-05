@@ -22,6 +22,10 @@ build:
 		-X ${PROJECT}/pkg_tools/version.copyright=${COPYRIGHT}" \
 		-o ./cmd/csv-searcher/${EXE_FILE} ./cmd/csv-searcher/
 
+## check: Run linters
+check:
+	golangci-lint -c ./golangci-lint.yaml run
+
 ## run: Run application
 run: 
 	go run ./cmd/csv-searcher/
