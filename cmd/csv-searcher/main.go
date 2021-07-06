@@ -60,9 +60,13 @@ func (app *App) loadDataFile(path string) error {
 	app.DataHead = strings.Split(scanner.Text(), ",")
 
 	// var txtlines []string
+	// []interface{}
 
 	// for scanner.Scan() {
-	// 	txtlines = append(txtlines, scanner.Text())
+	// 	txtlines := strings.Split(scanner.Text(), ",")
+	// 	for ii := 0; ii < len(app.DataHead); ii++ {
+	// 		app.Data[app.DataHead[ii]] = append(app.Data[app.DataHead[ii]], txtlines[ii])
+	// 	}
 	// }
 
 	app.DataFile = path
