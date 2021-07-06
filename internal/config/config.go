@@ -23,7 +23,7 @@ type Config struct {
 }
 
 // loading configuration parameters from a file
-func (c Config) loadConfFile(path string) error {
+func (c *Config) loadConfFile(path string) error {
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		if f, err := os.Open(path); err != nil {
 			return err
