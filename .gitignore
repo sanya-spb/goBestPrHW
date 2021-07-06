@@ -1,2 +1,5 @@
 /.vscode/
 /cmd/csv-searcher/csv-searcher
+data/owid-covid-data.txt
+errors.log
+access.log

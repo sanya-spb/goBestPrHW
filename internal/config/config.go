@@ -18,6 +18,8 @@ type Config struct {
 	Debug      bool   `toml:"debug" yaml:"debug" json:"debug"`
 	BatchMode  bool   `toml:"batch" yaml:"batch" json:"batch"`
 	DataFile   string `toml:"data_file" yaml:"data_file" json:"data_file"`
+	LogAccess  string `toml:"log_access" yaml:"log_access" json:"log_access"`
+	LogErrors  string `toml:"log_errors" yaml:"log_errors" json:"log_errors"`
 }
 
 // loading configuration parameters from a file
@@ -56,6 +58,15 @@ func (c Config) loadConfFile(path string) error {
 func NewConfig() *Config {
 	var result *Config = new(Config)
 	flag.StringVar(&result.ConfigFile, "config", GetEnv("CONFIG", ""), "Configuration settings file")
+	flag.BoolVar(&result.Debug, "debug", GetEnvBool("DEBUG", false), "Output of detailed debugging information")
+	flag.BoolVar(&result.BatchMode, "batch", GetEnvBool("BATCH", false), "Run in batch/no interactive mode")
+	flag.StringVar(&result.DataFile, "data", GetEnv("DATA", ""), "The path to the file *.scv with data (recuired)")
+	flag.StringVar(&result.LogAccess, "log-access", GetEnv("LOG_ACCESS", "./access.log"), "Log file for user input")
+	flag.StringVar(&result.LogErrors, "log-errors", GetEnv("LOG_ERRORS", "./errors.log"), "Log file for errors")
+	// flag.StringVar(&result.Hash, "hash", GetEnv("HASH", "md5"), "HASH method: [md5, crc32], default md5")
+	// flag.Uint64Var(&result.MaxSize, "max-size", GetEnvUInt("MAX_SIZE", 0), "limit maximum file size for checking, 0 - disable")
+	// flag.Uint64Var(&result.DFactor, "double-factor", GetEnvUInt("D_FACTOR", 1), "double factor, default > 1")
+	// flag.BoolVar(&result.Size, "size", GetEnvBool("SIZE", true), "Compare files by size")
 	flag.Parse()
 
 	if result.ConfigFile != "" {
@@ -64,15 +75,6 @@ func NewConfig() *Config {
 			os.Exit(1)
 		}
 	}
-
-	flag.BoolVar(&result.Debug, "debug", GetEnvBool("DEBUG", false), "Output of detailed debugging information")
-	flag.BoolVar(&result.BatchMode, "batch", GetEnvBool("BATCH", false), "Run in batch/no interactive mode")
-	flag.StringVar(&result.DataFile, "data", GetEnv("DATA", ""), "The path to the file *.scv with data (recuired)")
-	// flag.StringVar(&result.Hash, "hash", GetEnv("HASH", "md5"), "HASH method: [md5, crc32], default md5")
-	// flag.Uint64Var(&result.MaxSize, "max-size", GetEnvUInt("MAX_SIZE", 0), "limit maximum file size for checking, 0 - disable")
-	// flag.Uint64Var(&result.DFactor, "double-factor", GetEnvUInt("D_FACTOR", 1), "double factor, default > 1")
-	// flag.BoolVar(&result.Size, "size", GetEnvBool("SIZE", true), "Compare files by size")
-	flag.Parse()
 
 	// Determine the initial directories.
 	// result.Dirs = flag.Args()

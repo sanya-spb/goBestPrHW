@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +18,9 @@ type App struct {
 	Version  version.AppVersion
 	Config   config.Config
 	DataFile string
+	exPath   string
+	lErr     *log.Logger
+	lOut     *log.Logger
 	// logrus  *logrus.Logger
 }
 
@@ -40,14 +45,14 @@ func (app *App) loadDataFile(path string) error {
 	return nil
 }
 
-func (app *App) getExecPath() (exPath string, err error) {
-	ex, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	exPath = filepath.Dir(ex)
-	return exPath, nil
-}
+// func (app *App) getExecPath() (exPath string, err error) {
+// 	ex, err := os.Executable()
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	exPath = filepath.Dir(ex)
+// 	return exPath, nil
+// }
 
 func (app *App) runCommand(commandStr string) error {
 	commandStr = strings.TrimSuffix(commandStr, "\n")
@@ -68,23 +73,49 @@ func (app *App) runCommand(commandStr string) error {
 	return nil
 }
 
-func newApp() *App {
+func newApp() (*App, error) {
 	var app *App = new(App)
 	app.Version = *version.Version
 	app.Config = *config.NewConfig()
-	return app
+
+	if ex, err := os.Executable(); err != nil {
+		return nil, err
+	} else {
+		ex = filepath.Dir(ex)
+		app.exPath = ex
+	}
+
+	if fAccess, err := os.OpenFile(app.Config.LogAccess, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666); err != nil {
+		return nil, errors.New(err.Error())
+	} else {
+		defer fAccess.Close()
+		app.lOut = log.New(fAccess, "", log.LstdFlags)
+		app.lOut.Println("run")
+	}
+	if fErrors, err := os.OpenFile(app.Config.LogErrors, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666); err != nil {
+		return nil, errors.New(err.Error())
+	} else {
+		defer fErrors.Close()
+		app.lErr = log.New(fErrors, "", log.LstdFlags)
+		app.lErr.Println("run")
+	}
+
+	return app, nil
+}
+
+func (app *App) welcome() {
+	fmt.Fprintf(os.Stderr, "Welcome to csv-searcher!\nWorking directory: %s\nVersion: %s [%s@%s]\nCopyright: %s\n\n", app.exPath, app.Version.Version, app.Version.Commit, app.Version.BuildTime, app.Version.Copyright)
 }
 
 func main() {
 	// Init our app
-	app := newApp()
-
-	if exPath, err := app.getExecPath(); err != nil {
-
-	} else {
-		fmt.Fprintf(os.Stderr, "Welcome to csv-searcher!\nWorking directory: %s\nVersion: %s [%s@%s]\nCopyright: %s\n\n", exPath, app.Version.Version, app.Version.Commit, app.Version.BuildTime, app.Version.Copyright)
+	app, err := newApp()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
 	}
-	// fmt.Fprintf(os.Stderr, "%v\n", app)
+
+	app.welcome()
 
 	if app.Config.BatchMode {
 		if err := app.checkConfig(); err != nil {
