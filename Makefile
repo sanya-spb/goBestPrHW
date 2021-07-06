@@ -16,10 +16,10 @@ COPYRIGHT := "sanya-spb"
 build:
 	GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=$(CGO_ENABLED) go build \
 		-ldflags "-s -w \
-		-X ${PROJECT}/pkg_tools/version.version=${RELEASE} \
-		-X ${PROJECT}/pkg_tools/version.commit=${COMMIT} \
-		-X ${PROJECT}/pkg_tools/version.buildTime=${BUILD_TIME} \
-		-X ${PROJECT}/pkg_tools/version.copyright=${COPYRIGHT}" \
+		-X ${PROJECT}/pkg/version.version=${RELEASE} \
+		-X ${PROJECT}/pkg/version.commit=${COMMIT} \
+		-X ${PROJECT}/pkg/version.buildTime=${BUILD_TIME} \
+		-X ${PROJECT}/pkg/version.copyright=${COPYRIGHT}" \
 		-o ./cmd/csv-searcher/${EXE_FILE} ./cmd/csv-searcher/
 
 ## check: Run linters

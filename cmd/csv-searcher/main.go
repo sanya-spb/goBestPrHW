@@ -82,7 +82,7 @@ func main() {
 	if exPath, err := app.getExecPath(); err != nil {
 
 	} else {
-		fmt.Fprintf(os.Stderr, "Welcome to csv-searcher!\nWorking directory: %s\nVersion: %+v\n\n", exPath, app.Version.Version)
+		fmt.Fprintf(os.Stderr, "Welcome to csv-searcher!\nWorking directory: %s\nVersion: %s [%s@%s]\nCopyright: %s\n\n", exPath, app.Version.Version, app.Version.Commit, app.Version.BuildTime, app.Version.Copyright)
 	}
 	// fmt.Fprintf(os.Stderr, "%v\n", app)
 
