@@ -98,7 +98,9 @@ func (app *App) loadDataFile(path string) error {
 		for i, v := range cvsRow {
 			cvsRowI[i] = v
 		}
-		_ = app.Data.addRow(cvsRowI)
+		if err := app.Data.addRow(cvsRowI); err != nil {
+			lErr.Printf(err.Error())
+		}
 	}
 
 	app.DataFile = path
@@ -132,7 +134,7 @@ func (app *App) runCommand(commandStr string) error {
 	case "config":
 		fmt.Printf("%+v\n", app.Config)
 	case "headers":
-		fmt.Printf("%+v\n", app.Data.getHead())
+		app.Data.getHead()
 	case "dump":
 		fmt.Printf("%+v\n", app.Data)
 	case "select":

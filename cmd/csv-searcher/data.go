@@ -6,40 +6,71 @@ import (
 	"strings"
 )
 
+type Header struct {
+	name   string
+	lenght int
+}
+
+type Headers []*Header
+
 // structure for storing data
 type Data struct {
-	Head []string
+	Headers
 	Data map[string]interface{}
 	rows int
 }
 
 func (data *Data) setHead(headers []string) {
-	for _, value := range headers {
-		data.Head = append(data.Head, strings.TrimSpace(value))
-	}
+	data.Headers = make(Headers, 0, len(headers))
+	data.Data = make(map[string]interface{})
 	data.rows = 0
-	data.Data = nil
+	for _, value := range headers {
+		var tHead Header
+		tHead.name = strings.TrimSpace(value)
+		tHead.lenght = len(tHead.name)
+		data.Headers = append(data.Headers, &tHead)
+	}
 	// data.Head = headers
 }
 
-func (data *Data) getHead() []string {
-	return data.Head
+func (data *Data) getHead() {
+	var (
+		maxValWidth int
+		maxValLen   int
+	)
+
+	for _, value := range data.Headers {
+		if len(value.name) > maxValWidth {
+			maxValWidth = len(value.name)
+		}
+		if len(fmt.Sprint(value.lenght)) > maxValLen {
+			maxValLen = len(fmt.Sprint(value.lenght))
+		}
+	}
+	// sort.Sort(sHead)
+	for _, valH := range data.Headers {
+		fmt.Printf("%-"+fmt.Sprint(maxValWidth+1)+"s length: %"+fmt.Sprint(maxValLen+1)+"d\n", valH.name, valH.lenght)
+	}
 }
 
 func (data *Data) addRow(row []interface{}) error {
-	if len(row) != len(data.Head) {
+	if len(row) != len(data.Headers) {
 		return errors.New("Columns in row not equal header")
 	}
 
-	for i, v := range data.Head {
+	for key, value := range data.Headers {
 		// t := data.Data[v]
-		row[i] = strings.TrimSpace(fmt.Sprintf("%v", row[i]))
-		switch t := data.Data[v].(type) {
+		row[key] = strings.TrimSpace(fmt.Sprintf("%v", row[key]))
+		if value.lenght < len(fmt.Sprint(row[key])) {
+			value.lenght = len(fmt.Sprint(row[key]))
+			data.Headers[key] = value
+		}
+		switch t := data.Data[value.name].(type) {
 		case []interface{}:
-			data.Data[v] = append(t, row[i])
+			data.Data[value.name] = append(t, row[key])
 		case nil:
-			col := []interface{}{row[i]}
-			data.Data[v] = col
+			col := []interface{}{row[key]}
+			data.Data[value.name] = col
 		}
 	}
 	data.rows++
@@ -47,13 +78,10 @@ func (data *Data) addRow(row []interface{}) error {
 }
 
 func (data *Data) selectHead(cols []string) {
-	// fmt.Printf("DEBUG1: %+v\n", cols)
 	for _, col := range cols {
-		// fmt.Printf("DEBUG2: %s\n", col)
-		for _, valH := range data.Head {
-			// fmt.Printf("DEBUG3: %s\n", valH)
-			if col == valH {
-				fmt.Printf("%v\t", valH)
+		for keyH, valH := range data.Headers {
+			if col == valH.name {
+				fmt.Printf("%-"+fmt.Sprint(valH.lenght+1)+"v", keyH)
 			}
 		}
 	}
@@ -62,9 +90,9 @@ func (data *Data) selectHead(cols []string) {
 
 func (data *Data) selectRow(cols []string, row int) {
 	for _, col := range cols {
-		for _, valH := range data.Head {
-			if col == valH {
-				fmt.Printf("%v\t", data.Data[valH].([]interface{})[row])
+		for _, valH := range data.Headers {
+			if col == valH.name {
+				fmt.Printf("%-"+fmt.Sprint(valH.lenght+1)+"v", data.Data[valH.name].([]interface{})[row])
 			}
 		}
 		// fmt.Printf("%v\t", col)

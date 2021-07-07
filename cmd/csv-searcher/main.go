@@ -28,21 +28,21 @@ func main() {
 	if app.Config.DataFile != "" {
 		if err := app.loadDataFile(app.Config.DataFile); err != nil {
 			// fmt.Fprintln(os.Stderr, err)
-			lErr.Fatalln(err.Error())
+			lErr.Println(err.Error())
 		}
 	}
 
 	if app.Config.BatchMode {
 		if err := app.checkConfig(); err != nil {
 			// fmt.Fprintln(os.Stderr, err.Error())
-			lErr.Fatalln(err.Error())
+			lErr.Println(err.Error())
 			flag.PrintDefaults()
 			os.Exit(1)
 		}
 
 		if !app.isDataLoaded() {
 			// fmt.Fprintln(os.Stderr, errors.New("File not loaded"))
-			lErr.Fatalln(errors.New("File not loaded"))
+			lErr.Println(errors.New("File not loaded"))
 			os.Exit(1)
 		}
 	} else {
@@ -62,7 +62,7 @@ func main() {
 			}
 			if err = app.runCommand(cmdString); err != nil {
 				// fmt.Fprintln(os.Stderr, err)
-				lErr.Fatalln(err.Error())
+				lErr.Println(err.Error())
 			}
 		}
 	}
