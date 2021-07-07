@@ -11,6 +11,7 @@ import (
 type Header struct {
 	name   string
 	lenght int
+	// colType string
 }
 
 // slice for all column
@@ -149,11 +150,13 @@ func (data *Data) selectData(cols []string, filters []Filter) {
 		filteredRows = append(filteredRows, ii)
 	}
 	for _, filter := range filters {
+		// fmt.Printf("DEBUG1: filteredRows=%v\n", filteredRows)
 		if err := data.filterData(&filteredRows, filter); err != nil {
 			lErr.Printf(err.Error())
 			return
 		}
 	}
+	// fmt.Printf("DEBUG2: filteredRows=%v\n", filteredRows)
 	for _, row := range filteredRows {
 		data.selectAllRow(cols, row)
 	}
@@ -165,65 +168,142 @@ func (data *Data) filterData(sourceRows *[]int, filter Filter) error {
 	for _, v := range *sourceRows {
 		index[v] = true
 	}
-	for _, row := range *sourceRows {
-		switch filter.preposition {
-		case "and", "":
+	switch filter.preposition {
+	case "and", "":
+		for _, row := range *sourceRows {
 			switch t := data.Data[filter.columnName].([]interface{})[row].(type) {
 			case string:
-				switch filter.operator {
-				case "=":
-					if !(t == filter.value.(string)) {
-						index[row] = false
+				if fmt.Sprintf("%T", filter.value) == "string" {
+					switch filter.operator {
+					case "=":
+						if !(t == filter.value.(string)) {
+							index[row] = false
+						}
+					case ">":
+						if !(t > filter.value.(string)) {
+							index[row] = false
+						}
+					case "<":
+						if !(t < filter.value.(string)) {
+							index[row] = false
+						}
+					default:
+						return errors.New("undefined operator!")
 					}
-				case ">":
-					if !(t > filter.value.(string)) {
-						index[row] = false
-					}
-				case "<":
-					if !(t < filter.value.(string)) {
-						index[row] = false
-					}
-				default:
-					return errors.New("undefined operator!")
+				} else {
+					index[row] = false
 				}
 			case int64:
-				switch filter.operator {
-				case "=":
-					if !(t == filter.value.(int64)) {
-						index[row] = false
+				if fmt.Sprintf("%T", filter.value) == "int64" {
+					switch filter.operator {
+					case "=":
+						if !(t == filter.value.(int64)) {
+							index[row] = false
+						}
+					case ">":
+						if !(t > filter.value.(int64)) {
+							index[row] = false
+						}
+					case "<":
+						if !(t < filter.value.(int64)) {
+							index[row] = false
+						}
+					default:
+						return errors.New("undefined operator!")
 					}
-				case ">":
-					// fmt.Println("debug int")
-					if !(t > filter.value.(int64)) {
-						index[row] = false
-					}
-				case "<":
-					if !(t < filter.value.(int64)) {
-						index[row] = false
-					}
-				default:
-					return errors.New("undefined operator!")
+				} else {
+					index[row] = false
 				}
 			case float64:
-				switch filter.operator {
-				case "=":
-					if !(t == filter.value.(float64)) {
-						index[row] = false
+				if fmt.Sprintf("%T", filter.value) == "float64" {
+					switch filter.operator {
+					case "=":
+						if !(t == filter.value.(float64)) {
+							index[row] = false
+						}
+					case ">":
+						if !(t > filter.value.(float64)) {
+							index[row] = false
+						}
+					case "<":
+						if !(t < filter.value.(float64)) {
+							index[row] = false
+						}
+					default:
+						return errors.New("undefined operator!")
 					}
-				case ">":
-					if !(t > filter.value.(float64)) {
-						index[row] = false
-					}
-				case "<":
-					if !(t < filter.value.(float64)) {
-						index[row] = false
-					}
-				default:
-					return errors.New("undefined operator!")
+				} else {
+					index[row] = false
 				}
 			}
-		case "or":
-			// for key, value := range data.Data[filter.columnName].([]interface{}) {
+		}
+	case "or":
+		for row := 0; row < data.rows; row++ {
+			switch t := data.Data[filter.columnName].([]interface{})[row].(type) {
+			case string:
+				if fmt.Sprintf("%T", filter.value) == "string" {
+					switch filter.operator {
+					case "=":
+						if t == filter.value.(string) {
+							index[row] = true
+						}
+					case ">":
+						if t > filter.value.(string) {
+							index[row] = true
+						}
+					case "<":
+						if t < filter.value.(string) {
+							index[row] = true
+						}
+					default:
+						return errors.New("undefined operator!")
+					}
+				} else {
+					index[row] = false
+				}
+			case int64:
+				if fmt.Sprintf("%T", filter.value) == "int64" {
+					switch filter.operator {
+					case "=":
+						if t == filter.value.(int64) {
+							index[row] = true
+						}
+					case ">":
+						if t > filter.value.(int64) {
+							index[row] = true
+						}
+					case "<":
+						if t < filter.value.(int64) {
+							index[row] = true
+						}
+					default:
+						return errors.New("undefined operator!")
+					}
+				} else {
+					index[row] = false
+				}
+			case float64:
+				if fmt.Sprintf("%T", filter.value) == "float64" {
+					switch filter.operator {
+					case "=":
+						if t == filter.value.(float64) {
+							index[row] = true
+						}
+					case ">":
+						if t > filter.value.(float64) {
+							index[row] = true
+						}
+					case "<":
+						if t < filter.value.(float64) {
+							index[row] = true
+						}
+					default:
+						return errors.New("undefined operator!")
+					}
+				} else {
+					index[row] = false
+				}
+			}
 		}
 	}
 	result := make([]int, 0, len(*sourceRows))
