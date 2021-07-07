@@ -14,6 +14,7 @@ import (
 	"github.com/sanya-spb/goBestPrHW/pkg/version"
 )
 
+// application struct
 type App struct {
 	Version  version.AppVersion
 	Config   config.Config
@@ -39,6 +40,7 @@ func (app *App) checkConfig() error {
 // 	return nil
 // }
 
+// cmd: pwd (show current working directory)
 func (app *App) cmdPWD() error {
 	path, err := os.Getwd()
 	if err != nil {
@@ -48,6 +50,7 @@ func (app *App) cmdPWD() error {
 	return nil
 }
 
+// cmd: ls (list files in current directory)
 func (app *App) cmdLS() error {
 	files, err := ioutil.ReadDir("./")
 	if err != nil {
@@ -63,6 +66,7 @@ func (app *App) cmdLS() error {
 	return nil
 }
 
+// cmd: cd (change dir)
 func (app *App) cmdCD(dir string) error {
 	if err := os.Chdir(dir); err != nil {
 		return err
@@ -73,6 +77,7 @@ func (app *App) cmdCD(dir string) error {
 	return nil
 }
 
+// cmd: select (show data based on expression)
 func (app *App) cmdSELECT(expr string) error {
 	var (
 		cols   []string
@@ -103,6 +108,7 @@ func (app *App) cmdSELECT(expr string) error {
 	return nil
 }
 
+// load csv data to memory
 func (app *App) loadDataFile(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return err
@@ -146,6 +152,7 @@ func (app *App) loadDataFile(path string) error {
 // 	return exPath, nil
 // }
 
+// user iteraction
 func (app *App) runCommand(commandStr string) error {
 	commandStr = strings.TrimSuffix(commandStr, "\n")
 	arrCommandStr := strings.Fields(commandStr)
@@ -183,6 +190,7 @@ func (app *App) runCommand(commandStr string) error {
 	return nil
 }
 
+// init for App
 func newApp() (*App, error) {
 	var app *App = new(App)
 	app.Version = *version.Version
@@ -214,10 +222,12 @@ func newApp() (*App, error) {
 	return app, nil
 }
 
+// print welcome message
 func (app *App) welcome() {
 	fmt.Fprintf(os.Stdout, "Welcome to csv-searcher!\nWorking directory: %s\nVersion: %s [%s@%s]\nCopyright: %s\n\n", app.exPath, app.Version.Version, app.Version.Commit, app.Version.BuildTime, app.Version.Copyright)
 }
 
+// get flag of loaded data
 func (app *App) isDataLoaded() bool {
 	if app.DataFile != "" {
 		return true

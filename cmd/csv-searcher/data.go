@@ -6,11 +6,13 @@ import (
 	"strings"
 )
 
+// description of column
 type Header struct {
 	name   string
 	lenght int
 }
 
+// slice for all column
 type Headers []*Header
 
 // structure for storing data
@@ -20,6 +22,7 @@ type Data struct {
 	rows int
 }
 
+// fill header in data struct
 func (data *Data) setHead(headers []string) {
 	data.Headers = make(Headers, 0, len(headers))
 	data.Data = make(map[string]interface{})
@@ -33,6 +36,7 @@ func (data *Data) setHead(headers []string) {
 	// data.Head = headers
 }
 
+// get all column names
 func (data *Data) getAllHeaders() []string {
 	var result []string
 	for _, val := range data.Headers {
@@ -41,6 +45,7 @@ func (data *Data) getAllHeaders() []string {
 	return result
 }
 
+// execute cmd: headers
 func (data *Data) cmdHeaders() error {
 	var (
 		maxValWidth int
@@ -62,6 +67,7 @@ func (data *Data) cmdHeaders() error {
 	return nil
 }
 
+// fill row in data struct
 func (data *Data) addRow(row []interface{}) error {
 	if len(row) != len(data.Headers) {
 		return errors.New("Columns in row not equal header")
@@ -86,6 +92,7 @@ func (data *Data) addRow(row []interface{}) error {
 	return nil
 }
 
+// show header
 func (data *Data) selectHead(cols []string) {
 	for _, col := range cols {
 		for _, valH := range data.Headers {
@@ -97,6 +104,7 @@ func (data *Data) selectHead(cols []string) {
 	fmt.Printf("\n")
 }
 
+// simple version to get row without filter
 func (data *Data) selectAllRow(cols []string, row int) {
 	for _, col := range cols {
 		for _, valH := range data.Headers {
@@ -109,6 +117,7 @@ func (data *Data) selectAllRow(cols []string, row int) {
 	fmt.Printf("\n")
 }
 
+// simple version to get all data without filter
 func (data *Data) selectAllData(cols []string) {
 	data.selectHead(cols)
 	for ii := 0; ii < data.rows; ii++ {

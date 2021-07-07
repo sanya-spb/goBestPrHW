@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// configuration struct
 type Config struct {
 	ConfigFile string
 	Debug      bool   `toml:"debug" yaml:"debug" json:"debug"`
