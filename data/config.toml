@@ -1,5 +1,5 @@
 # debug = false                         # Output of detailed debugging information (default: false)
 # batch = false                         # Run in batch/no interactive mode (default: false)
-data_file="./data/owid-covid-data.txt"  # The path to the file *.scv with data (recuired)
+data_file="./data/test1.csv"            # The path to the file *.scv with data (recuired)
 # log_access="./access.log"             # Log file for user input (default: ./access.log)
 # log_errors = "./errors.log"           # Log file for errors (default: ./errors.log)

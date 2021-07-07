@@ -14,16 +14,22 @@ import (
 	"github.com/sanya-spb/goBestPrHW/pkg/version"
 )
 
+// structure for storing data
+type Data struct {
+	Head []string
+	Data map[string]interface{}
+	rows int
+}
+
 type App struct {
 	Version  version.AppVersion
 	Config   config.Config
 	DataFile string
-	Data     map[string]interface{}
-	DataHead []string
-	exPath   string
-	lErr     *log.Logger
-	lOut     *log.Logger
-	prompt   string
+	Data
+	exPath string
+	lErr   *log.Logger
+	lOut   *log.Logger
+	prompt string
 }
 
 // Checking the required condition
@@ -57,17 +63,18 @@ func (app *App) loadDataFile(path string) error {
 	scanner.Split(bufio.ScanLines)
 
 	scanner.Scan()
-	app.DataHead = strings.Split(scanner.Text(), ",")
+	app.Data.setHead(strings.Split(scanner.Text(), ","))
 
-	// var txtlines []string
-	// []interface{}
-
-	// for scanner.Scan() {
-	// 	txtlines := strings.Split(scanner.Text(), ",")
-	// 	for ii := 0; ii < len(app.DataHead); ii++ {
-	// 		app.Data[app.DataHead[ii]] = append(app.Data[app.DataHead[ii]], txtlines[ii])
-	// 	}
-	// }
+	app.Data.Data = make(map[string]interface{})
+	for scanner.Scan() {
+		cvsRow := strings.Split(scanner.Text(), ",")
+		//converting a []string to a []interface{}
+		cvsRowI := make([]interface{}, len(cvsRow))
+		for i, v := range cvsRow {
+			cvsRowI[i] = v
+		}
+		app.Data.addRow(cvsRowI)
+	}
 
 	app.DataFile = path
 	return nil
@@ -82,6 +89,80 @@ func (app *App) loadDataFile(path string) error {
 // 	return exPath, nil
 // }
 
+func (data *Data) setHead(headers []string) {
+	for _, value := range headers {
+		data.Head = append(data.Head, strings.TrimSpace(value))
+	}
+	data.rows = 0
+	data.Data = nil
+	// data.Head = headers
+}
+
+func (data *Data) getHead() []string {
+	return data.Head
+}
+
+func (data *Data) addRow(row []interface{}) error {
+	if len(row) != len(data.Head) {
+		return errors.New("Columns in row not equal header")
+	}
+
+	for i, v := range data.Head {
+		// t := data.Data[v]
+		row[i] = strings.TrimSpace(fmt.Sprintf("%v", row[i]))
+		switch t := data.Data[v].(type) {
+		case []interface{}:
+			data.Data[v] = append(t, row[i])
+		case nil:
+			col := []interface{}{row[i]}
+			data.Data[v] = col
+		}
+	}
+	data.rows++
+	return nil
+}
+
+func (data *Data) selectHead(cols []string) {
+	// fmt.Printf("DEBUG1: %+v\n", cols)
+	for _, col := range cols {
+		// fmt.Printf("DEBUG2: %s\n", col)
+		for _, valH := range data.Head {
+			// fmt.Printf("DEBUG3: %s\n", valH)
+			if col == valH {
+				fmt.Printf("%v\t", valH)
+			}
+		}
+	}
+	fmt.Printf("\n")
+}
+
+func (data *Data) selectRow(cols []string, row int) {
+	for _, col := range cols {
+		for _, valH := range data.Head {
+			if col == valH {
+				fmt.Printf("%v\t", data.Data[valH].([]interface{})[row])
+			}
+		}
+		// fmt.Printf("%v\t", col)
+	}
+	fmt.Printf("\n")
+}
+
+func (data *Data) selectData(cols []string) {
+	data.selectHead(cols)
+
+	for ii := 0; ii < data.rows; ii++ {
+		data.selectRow(cols, ii)
+	}
+	// for _, hVal := range data.Head {
+	// 	for _, dVal := range data.Data[hVal] {
+	// 		// fmt.Printf("%v\t", value)
+	// 	}
+	// 	fmt.Printf("\n")
+	// }
+	// return data.Head.([]interface{})
+}
+
 func (app *App) runCommand(commandStr string) error {
 	commandStr = strings.TrimSuffix(commandStr, "\n")
 	arrCommandStr := strings.Fields(commandStr)
@@ -94,7 +175,11 @@ func (app *App) runCommand(commandStr string) error {
 	case "config":
 		fmt.Printf("%+v\n", app.Config)
 	case "headers":
-		fmt.Printf("%+v\n", app.DataHead)
+		fmt.Printf("%+v\n", app.Data.getHead())
+	case "dump":
+		fmt.Printf("%+v\n", app.Data)
+	case "select":
+		app.Data.selectData(arrCommandStr[1:])
 	case "exit":
 		os.Exit(0)
 		// add another case here for custom commands.
