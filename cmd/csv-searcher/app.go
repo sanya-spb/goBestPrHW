@@ -73,6 +73,36 @@ func (app *App) cmdCD(dir string) error {
 	return nil
 }
 
+func (app *App) cmdSELECT(expr string) error {
+	var (
+		cols   []string
+		sWhere string
+	)
+
+	splitExpr := strings.Split(expr, "where")
+	if len(splitExpr) == 1 || len(splitExpr) == 2 {
+		sCols := splitExpr[0]
+		cols = strings.Split(sCols, ",")
+		for k, v := range cols {
+			cols[k] = strings.TrimSpace(v)
+			if cols[k] == "*" {
+				cols = app.Data.getAllHeaders()
+				break
+			}
+		}
+		if len(splitExpr) == 2 {
+			sWhere = splitExpr[1]
+		}
+	} else {
+		return errors.New("Invalid expession!")
+	}
+
+	fmt.Printf("cols: %v\nwhere: %s\n", cols, sWhere)
+
+	app.Data.selectAllData(cols)
+	return nil
+}
+
 func (app *App) loadDataFile(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return err
@@ -134,11 +164,12 @@ func (app *App) runCommand(commandStr string) error {
 	case "config":
 		fmt.Printf("%+v\n", app.Config)
 	case "headers":
-		app.Data.getHead()
+		return app.Data.cmdHeaders()
 	case "dump":
 		fmt.Printf("%+v\n", app.Data)
 	case "select":
-		app.Data.selectData(arrCommandStr[1:])
+		// app.Data.selectData(arrCommandStr[1:])
+		return app.cmdSELECT(strings.Join(arrCommandStr[1:], " "))
 	case "exit":
 		os.Exit(0)
 		// add another case here for custom commands.

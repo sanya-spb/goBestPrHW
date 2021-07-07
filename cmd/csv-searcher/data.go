@@ -33,7 +33,15 @@ func (data *Data) setHead(headers []string) {
 	// data.Head = headers
 }
 
-func (data *Data) getHead() {
+func (data *Data) getAllHeaders() []string {
+	var result []string
+	for _, val := range data.Headers {
+		result = append(result, val.name)
+	}
+	return result
+}
+
+func (data *Data) cmdHeaders() error {
 	var (
 		maxValWidth int
 		maxValLen   int
@@ -51,6 +59,7 @@ func (data *Data) getHead() {
 	for _, valH := range data.Headers {
 		fmt.Printf("%-"+fmt.Sprint(maxValWidth+1)+"s length: %"+fmt.Sprint(maxValLen+1)+"d\n", valH.name, valH.lenght)
 	}
+	return nil
 }
 
 func (data *Data) addRow(row []interface{}) error {
@@ -79,16 +88,16 @@ func (data *Data) addRow(row []interface{}) error {
 
 func (data *Data) selectHead(cols []string) {
 	for _, col := range cols {
-		for keyH, valH := range data.Headers {
+		for _, valH := range data.Headers {
 			if col == valH.name {
-				fmt.Printf("%-"+fmt.Sprint(valH.lenght+1)+"v", keyH)
+				fmt.Printf("%-"+fmt.Sprint(valH.lenght+1)+"v", valH.name)
 			}
 		}
 	}
 	fmt.Printf("\n")
 }
 
-func (data *Data) selectRow(cols []string, row int) {
+func (data *Data) selectAllRow(cols []string, row int) {
 	for _, col := range cols {
 		for _, valH := range data.Headers {
 			if col == valH.name {
@@ -100,17 +109,9 @@ func (data *Data) selectRow(cols []string, row int) {
 	fmt.Printf("\n")
 }
 
-func (data *Data) selectData(cols []string) {
+func (data *Data) selectAllData(cols []string) {
 	data.selectHead(cols)
-
 	for ii := 0; ii < data.rows; ii++ {
-		data.selectRow(cols, ii)
+		data.selectAllRow(cols, ii)
 	}
-	// for _, hVal := range data.Head {
-	// 	for _, dVal := range data.Data[hVal] {
-	// 		// fmt.Printf("%v\t", value)
-	// 	}
-	// 	fmt.Printf("\n")
-	// }
-	// return data.Head.([]interface{})
 }
