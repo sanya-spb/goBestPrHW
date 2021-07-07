@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -48,8 +49,41 @@ func (app *App) checkConfig() error {
 // 	return nil
 // }
 
+func (app *App) cmdPWD() error {
+	path, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	fmt.Println(path)
+	return nil
+}
+
+func (app *App) cmdLS() error {
+	files, err := ioutil.ReadDir("./")
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		if f.IsDir() {
+			fmt.Printf("%s/\n", f.Name())
+		} else {
+			fmt.Printf("%s\n", f.Name())
+		}
+	}
+	return nil
+}
+
+func (app *App) cmdCD(dir string) error {
+	os.Chdir(dir)
+	_, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (app *App) loadDataFile(path string) error {
-	if _, err := os.Stat(app.DataFile); !os.IsNotExist(err) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return err
 	}
 
@@ -170,6 +204,12 @@ func (app *App) runCommand(commandStr string) error {
 		return nil
 	}
 	switch arrCommandStr[0] {
+	case "pwd":
+		return app.cmdPWD()
+	case "ls":
+		return app.cmdLS()
+	case "cd":
+		return app.cmdCD(arrCommandStr[1])
 	case "load":
 		return app.loadDataFile(arrCommandStr[1])
 	case "config":
