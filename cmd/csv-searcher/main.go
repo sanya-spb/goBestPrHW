@@ -28,10 +28,13 @@ type App struct {
 	DataFile string
 	Data
 	exPath string
-	lErr   *log.Logger
-	lOut   *log.Logger
 	prompt string
 }
+
+var (
+	lErr *log.Logger
+	lOut *log.Logger
+)
 
 // Checking the required condition
 func (app *App) checkConfig() error {
@@ -74,9 +77,10 @@ func (app *App) cmdLS() error {
 }
 
 func (app *App) cmdCD(dir string) error {
-	os.Chdir(dir)
-	_, err := os.Getwd()
-	if err != nil {
+	if err := os.Chdir(dir); err != nil {
+		return err
+	}
+	if _, err := os.Getwd(); err != nil {
 		return err
 	}
 	return nil
@@ -107,7 +111,7 @@ func (app *App) loadDataFile(path string) error {
 		for i, v := range cvsRow {
 			cvsRowI[i] = v
 		}
-		app.Data.addRow(cvsRowI)
+		_ = app.Data.addRow(cvsRowI)
 	}
 
 	app.DataFile = path
@@ -250,22 +254,22 @@ func newApp() (*App, error) {
 		return nil, errors.New(err.Error())
 	} else {
 		defer fAccess.Close()
-		app.lOut = log.New(fAccess, "", log.LstdFlags)
-		app.lOut.Println("run")
+		lOut = log.New(fAccess, "", log.LstdFlags)
+		lOut.Println("run")
 	}
 	if fErrors, err := os.OpenFile(app.Config.LogErrors, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666); err != nil {
 		return nil, errors.New(err.Error())
 	} else {
 		defer fErrors.Close()
-		app.lErr = log.New(fErrors, "", log.LstdFlags)
-		app.lErr.Println("run")
+		lErr = log.New(fErrors, "", log.LstdFlags)
+		lErr.Println("run")
 	}
 
 	return app, nil
 }
 
 func (app *App) welcome() {
-	fmt.Fprintf(os.Stderr, "Welcome to csv-searcher!\nWorking directory: %s\nVersion: %s [%s@%s]\nCopyright: %s\n\n", app.exPath, app.Version.Version, app.Version.Commit, app.Version.BuildTime, app.Version.Copyright)
+	fmt.Fprintf(os.Stdout, "Welcome to csv-searcher!\nWorking directory: %s\nVersion: %s [%s@%s]\nCopyright: %s\n\n", app.exPath, app.Version.Version, app.Version.Commit, app.Version.BuildTime, app.Version.Copyright)
 }
 
 func (app *App) isDataLoaded() bool {
@@ -280,7 +284,8 @@ func main() {
 	// Init our app
 	app, err := newApp()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
+		// fmt.Fprintln(os.Stderr, err.Error())
+		lErr.Fatalln(err.Error())
 		os.Exit(1)
 	}
 
@@ -288,19 +293,22 @@ func main() {
 
 	if app.Config.DataFile != "" {
 		if err := app.loadDataFile(app.Config.DataFile); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			// fmt.Fprintln(os.Stderr, err)
+			lErr.Fatalln(err.Error())
 		}
 	}
 
 	if app.Config.BatchMode {
 		if err := app.checkConfig(); err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
+			// fmt.Fprintln(os.Stderr, err.Error())
+			lErr.Fatalln(err.Error())
 			flag.PrintDefaults()
 			os.Exit(1)
 		}
 
 		if !app.isDataLoaded() {
-			fmt.Fprintln(os.Stderr, errors.New("File not loaded"))
+			// fmt.Fprintln(os.Stderr, errors.New("File not loaded"))
+			lErr.Fatalln(errors.New("File not loaded"))
 			os.Exit(1)
 		}
 	} else {
@@ -315,10 +323,12 @@ func main() {
 			}(app.isDataLoaded()))
 			cmdString, err := reader.ReadString('\n')
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+				// fmt.Fprintln(os.Stderr, err)
+				lErr.Fatalln(err.Error())
 			}
 			if err = app.runCommand(cmdString); err != nil {
-				fmt.Fprintln(os.Stderr, err)
+				// fmt.Fprintln(os.Stderr, err)
+				lErr.Fatalln(err.Error())
 			}
 		}
 	}
