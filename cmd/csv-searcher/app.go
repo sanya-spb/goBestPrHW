@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/sanya-spb/goBestPrHW/internal/config"
@@ -80,31 +80,60 @@ func (app *App) cmdCD(dir string) error {
 // cmd: select (show data based on expression)
 func (app *App) cmdSELECT(expr string) error {
 	var (
-		cols   []string
-		sWhere string
+		cols    []string
+		filters []Filter
 	)
 
 	splitExpr := strings.Split(expr, "where")
 	if len(splitExpr) == 1 || len(splitExpr) == 2 {
 		sCols := splitExpr[0]
-		cols = strings.Split(sCols, ",")
-		for k, v := range cols {
-			cols[k] = strings.TrimSpace(v)
-			if cols[k] == "*" {
+		tCols := strings.Split(sCols, ",")
+		for _, v := range tCols {
+			v = strings.TrimSpace(v)
+			if app.Data.isHeader(v) {
+				cols = append(cols, v)
+			} else if v == "*" {
 				cols = app.Data.getAllHeaders()
 				break
+			} else {
+				return errors.New("invalid column name!")
 			}
+
 		}
 		if len(splitExpr) == 2 {
-			sWhere = splitExpr[1]
+			sWhere := splitExpr[1]
+			re1 := regexp.MustCompile(`(\s*(and|or){0,1}\s*(\w+\s*[><=]\s*[\w\"\.]+)\s*){1}`)
+			re2 := regexp.MustCompile(`\s*(and|or){0,1}\s*(\w+)\s*([><=])\s*([\w\"\.]+)\s*`)
+			for _, val := range re1.FindAllString(sWhere, -1) {
+				for _, val2 := range re2.FindAllString(val, -1) {
+					ff := re2.FindAllStringSubmatch(val2, -1)
+					if len(ff[0]) >= 4 {
+						filter := Filter{
+							preposition: ff[0][len(ff[0])-4:][0],
+							columnName:  ff[0][len(ff[0])-4:][1],
+							operator:    ff[0][len(ff[0])-4:][2],
+							value:       string2Interface(ff[0][len(ff[0])-4:][3], 10, 64),
+						}
+						if app.Data.isHeader(filter.columnName) {
+							filters = append(filters, filter)
+						} else {
+							return errors.New("invalid column name!")
+						}
+					} else {
+						return errors.New("Invalid filter!")
+					}
+				}
+			}
 		}
 	} else {
 		return errors.New("Invalid expession!")
 	}
 
-	fmt.Printf("cols: %v\nwhere: %s\n", cols, sWhere)
-
-	app.Data.selectAllData(cols)
+	if len(filters) == 0 {
+		app.Data.selectAllData(cols)
+	} else {
+		app.Data.selectData(cols, filters)
+	}
 	return nil
 }
 
@@ -129,10 +158,9 @@ func (app *App) loadDataFile(path string) error {
 	app.Data.Data = make(map[string]interface{})
 	for scanner.Scan() {
 		cvsRow := strings.Split(scanner.Text(), ",")
-		//converting a []string to a []interface{}
 		cvsRowI := make([]interface{}, len(cvsRow))
-		for i, v := range cvsRow {
-			cvsRowI[i] = v
+		for i, txt := range cvsRow {
+			cvsRowI[i] = string2Interface(strings.TrimSpace(txt), 10, 64)
 		}
 		if err := app.Data.addRow(cvsRowI); err != nil {
 			lErr.Printf(err.Error())
@@ -175,7 +203,6 @@ func (app *App) runCommand(commandStr string) error {
 	case "dump":
 		fmt.Printf("%+v\n", app.Data)
 	case "select":
-		// app.Data.selectData(arrCommandStr[1:])
 		return app.cmdSELECT(strings.Join(arrCommandStr[1:], " "))
 	case "exit":
 		os.Exit(0)
@@ -203,22 +230,6 @@ func newApp() (*App, error) {
 		ex = filepath.Dir(ex)
 		app.exPath = ex
 	}
-
-	if fAccess, err := os.OpenFile(app.Config.LogAccess, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666); err != nil {
-		return nil, errors.New(err.Error())
-	} else {
-		defer fAccess.Close()
-		lOut = log.New(fAccess, "", log.LstdFlags)
-		lOut.Println("run")
-	}
-	if fErrors, err := os.OpenFile(app.Config.LogErrors, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666); err != nil {
-		return nil, errors.New(err.Error())
-	} else {
-		defer fErrors.Close()
-		lErr = log.New(fErrors, "", log.LstdFlags)
-		lErr.Println("run")
-	}
-
 	return app, nil
 }
 

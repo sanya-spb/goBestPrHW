@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -20,6 +21,13 @@ type Data struct {
 	Headers
 	Data map[string]interface{}
 	rows int
+}
+
+type Filter struct {
+	preposition string
+	columnName  string
+	operator    string
+	value       interface{}
 }
 
 // fill header in data struct
@@ -43,6 +51,16 @@ func (data *Data) getAllHeaders() []string {
 		result = append(result, val.name)
 	}
 	return result
+}
+
+// check if exist this header
+func (data *Data) isHeader(test string) bool {
+	for _, header := range data.getAllHeaders() {
+		if test == header {
+			return true
+		}
+	}
+	return false
 }
 
 // execute cmd: headers
@@ -74,8 +92,6 @@ func (data *Data) addRow(row []interface{}) error {
 	}
 
 	for key, value := range data.Headers {
-		// t := data.Data[v]
-		row[key] = strings.TrimSpace(fmt.Sprintf("%v", row[key]))
 		if value.lenght < len(fmt.Sprint(row[key])) {
 			value.lenght = len(fmt.Sprint(row[key]))
 			data.Headers[key] = value
@@ -104,7 +120,7 @@ func (data *Data) selectHead(cols []string) {
 	fmt.Printf("\n")
 }
 
-// simple version to get row without filter
+// print row
 func (data *Data) selectAllRow(cols []string, row int) {
 	for _, col := range cols {
 		for _, valH := range data.Headers {
@@ -112,7 +128,6 @@ func (data *Data) selectAllRow(cols []string, row int) {
 				fmt.Printf("%-"+fmt.Sprint(valH.lenght+1)+"v", data.Data[valH.name].([]interface{})[row])
 			}
 		}
-		// fmt.Printf("%v\t", col)
 	}
 	fmt.Printf("\n")
 }
@@ -123,4 +138,103 @@ func (data *Data) selectAllData(cols []string) {
 	for ii := 0; ii < data.rows; ii++ {
 		data.selectAllRow(cols, ii)
 	}
+}
+
+// advanced version to get data with filter
+func (data *Data) selectData(cols []string, filters []Filter) {
+	data.selectHead(cols)
+
+	filteredRows := make([]int, 0, data.rows)
+	for ii := 0; ii < data.rows; ii++ {
+		filteredRows = append(filteredRows, ii)
+	}
+	for _, filter := range filters {
+		if err := data.filterData(&filteredRows, filter); err != nil {
+			lErr.Printf(err.Error())
+			return
+		}
+	}
+	for _, row := range filteredRows {
+		data.selectAllRow(cols, row)
+	}
+}
+
+// filter data
+func (data *Data) filterData(sourceRows *[]int, filter Filter) error {
+	index := make(map[int]bool, len(*sourceRows))
+	for _, v := range *sourceRows {
+		index[v] = true
+	}
+	for _, row := range *sourceRows {
+		switch filter.preposition {
+		case "and", "":
+			switch t := data.Data[filter.columnName].([]interface{})[row].(type) {
+			case string:
+				switch filter.operator {
+				case "=":
+					if !(t == filter.value.(string)) {
+						index[row] = false
+					}
+				case ">":
+					if !(t > filter.value.(string)) {
+						index[row] = false
+					}
+				case "<":
+					if !(t < filter.value.(string)) {
+						index[row] = false
+					}
+				default:
+					return errors.New("undefined operator!")
+				}
+			case int64:
+				switch filter.operator {
+				case "=":
+					if !(t == filter.value.(int64)) {
+						index[row] = false
+					}
+				case ">":
+					// fmt.Println("debug int")
+					if !(t > filter.value.(int64)) {
+						index[row] = false
+					}
+				case "<":
+					if !(t < filter.value.(int64)) {
+						index[row] = false
+					}
+				default:
+					return errors.New("undefined operator!")
+				}
+			case float64:
+				switch filter.operator {
+				case "=":
+					if !(t == filter.value.(float64)) {
+						index[row] = false
+					}
+				case ">":
+					if !(t > filter.value.(float64)) {
+						index[row] = false
+					}
+				case "<":
+					if !(t < filter.value.(float64)) {
+						index[row] = false
+					}
+				default:
+					return errors.New("undefined operator!")
+				}
+			}
+		case "or":
+			// for key, value := range data.Data[filter.columnName].([]interface{}) {
+		}
+	}
+	result := make([]int, 0, len(*sourceRows))
+	for k, v := range index {
+		if v {
+			result = append(result, k)
+		}
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i] < result[j]
+	})
+	*sourceRows = result
+	return nil
 }
