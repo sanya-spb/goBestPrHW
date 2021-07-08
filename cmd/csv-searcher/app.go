@@ -183,6 +183,7 @@ func (app *App) loadDataFile(path string) error {
 // user iteraction
 func (app *App) runCommand(commandStr string) error {
 	commandStr = strings.TrimSuffix(commandStr, "\n")
+	lOut.Printf("CMD: %s", commandStr)
 	arrCommandStr := strings.Fields(commandStr)
 	if len(arrCommandStr) <= 0 {
 		return nil
@@ -210,10 +211,6 @@ func (app *App) runCommand(commandStr string) error {
 	default:
 		return fmt.Errorf("Unknown command!")
 	}
-	// cmd := exec.Command(arrCommandStr[0], arrCommandStr[1:]...)
-	// cmd.Stderr = os.Stderr
-	// cmd.Stdout = os.Stdout
-	// return cmd.Run()
 	return nil
 }
 

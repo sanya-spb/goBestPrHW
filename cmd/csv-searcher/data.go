@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+// type Datas interface {
+// 	getAllHeaders() []string
+// 	isHeader(test string) bool
+// }
+
 // description of column
 type Header struct {
 	name   string
@@ -42,7 +47,6 @@ func (data *Data) setHead(headers []string) {
 		tHead.lenght = len(tHead.name)
 		data.Headers = append(data.Headers, &tHead)
 	}
-	// data.Head = headers
 }
 
 // get all column names
