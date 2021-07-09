@@ -27,10 +27,7 @@ func Test_Data_GetAllHeaders(t *testing.T) {
 		{
 			data: Data{
 				Headers: Headers{
-					&Header{
-						name:   "a",
-						lenght: 1,
-					},
+					&Header{name: "a", lenght: 1},
 				},
 				Data: map[string]interface{}{},
 				rows: 0,
@@ -106,10 +103,7 @@ func Test_Data_isHeader(t *testing.T) {
 		{
 			data: Data{
 				Headers: Headers{
-					&Header{
-						name:   "a",
-						lenght: 1,
-					},
+					&Header{name: "a", lenght: 1},
 				},
 				Data: map[string]interface{}{},
 				rows: 0,
@@ -148,18 +142,9 @@ func Test_Data_addRow(t *testing.T) {
 		{
 			data: Data{
 				Headers: Headers{
-					{
-						name:   "int",
-						lenght: 1,
-					},
-					{
-						name:   "txt",
-						lenght: 1,
-					},
-					{
-						name:   "float",
-						lenght: 1,
-					},
+					&Header{name: "int", lenght: 1},
+					&Header{name: "txt", lenght: 1},
+					&Header{name: "float", lenght: 1},
 				},
 				Data: map[string]interface{}{},
 				rows: 0,
@@ -171,18 +156,9 @@ func Test_Data_addRow(t *testing.T) {
 			},
 			wait: Data{
 				Headers: Headers{
-					{
-						name:   "int",
-						lenght: 2,
-					},
-					{
-						name:   "txt",
-						lenght: 3,
-					},
-					{
-						name:   "float",
-						lenght: 6,
-					},
+					&Header{name: "int", lenght: 2},
+					&Header{name: "txt", lenght: 3},
+					&Header{name: "float", lenght: 6},
 				},
 				Data: map[string]interface{}{
 					"int":   []interface{}{int64(42)},
@@ -200,6 +176,34 @@ func Test_Data_addRow(t *testing.T) {
 	}
 }
 
+func Test_Data_addRow_errors(t *testing.T) {
+	type Test struct {
+		data Data
+		arg1 []interface{}
+		wait string
+	}
+
+	ttEqual := []Test{
+		{
+			data: Data{
+				Headers: Headers{
+					&Header{name: "a", lenght: 1},
+				},
+				Data: map[string]interface{}{},
+				rows: 0,
+			},
+			arg1: []interface{}{},
+			wait: "Columns in row not equal header",
+		},
+	}
+
+	for _, v := range ttEqual {
+		err := v.data.addRow(v.arg1)
+		assert.EqualErrorf(t, err, v.wait, "Error should be: %v, got: %v", v.wait, err)
+
+	}
+}
+
 func Test_Data_filterData(t *testing.T) {
 	type Test struct {
 		data   Data
@@ -212,10 +216,7 @@ func Test_Data_filterData(t *testing.T) {
 		{
 			data: Data{
 				Headers: Headers{
-					{
-						name:   "a",
-						lenght: 1,
-					},
+					&Header{name: "a", lenght: 1},
 				},
 				Data: map[string]interface{}{
 					"a": []interface{}{int64(1)},
@@ -234,18 +235,9 @@ func Test_Data_filterData(t *testing.T) {
 		{
 			data: Data{
 				Headers: Headers{
-					{
-						name:   "a",
-						lenght: 1,
-					},
-					{
-						name:   "b",
-						lenght: 3,
-					},
-					{
-						name:   "c",
-						lenght: 3,
-					},
+					&Header{name: "a", lenght: 1},
+					&Header{name: "b", lenght: 3},
+					&Header{name: "c", lenght: 3},
 				},
 				Data: map[string]interface{}{
 					"a": []interface{}{int64(1), int64(2), int64(3)},
@@ -276,6 +268,87 @@ func Test_Data_filterData(t *testing.T) {
 	}
 }
 
+func Test_Data_filterData_errors(t *testing.T) {
+	type Test struct {
+		data   Data
+		rows   []int
+		filter Filter
+		wait   string
+	}
+
+	ttEqualError := []Test{
+		{
+			data: Data{
+				Headers: Headers{},
+				Data:    map[string]interface{}{},
+				rows:    0,
+			},
+			rows:   []int{0},
+			filter: Filter{},
+			wait:   "Empty filter!",
+		},
+		{
+			data: Data{
+				Headers: Headers{},
+				Data:    map[string]interface{}{},
+				rows:    0,
+			},
+			rows: []int{0},
+			filter: Filter{
+				preposition: "",
+				columnName:  "a",
+				operator:    "=",
+				value:       int64(1),
+			},
+			wait: "Empty headers!",
+		},
+		{
+			data: Data{
+				Headers: Headers{
+					&Header{name: "a", lenght: 1},
+				},
+				Data: map[string]interface{}{},
+				rows: 0,
+			},
+			rows: []int{0},
+			filter: Filter{
+				preposition: "",
+				columnName:  "a",
+				operator:    "=",
+				value:       int64(1),
+			},
+			wait: "Empty data!",
+		},
+		{
+			data: Data{
+				Headers: Headers{
+					&Header{name: "a", lenght: 1},
+				},
+				Data: map[string]interface{}{
+					"a": []interface{}{int64(1)},
+				},
+				rows: 1,
+			},
+			rows: nil,
+			filter: Filter{
+				preposition: "",
+				columnName:  "a",
+				operator:    "=",
+				value:       int64(1),
+			},
+			wait: "Empty input rows!",
+		},
+	}
+
+	ctx := context.Background()
+
+	for _, v := range ttEqualError {
+		err := v.data.filterData(ctx, &v.rows, v.filter)
+		assert.EqualErrorf(t, err, v.wait, "Error should be: %v, got: %v", v.wait, err)
+
+	}
+}
+
 func Test_Data_runFilter(t *testing.T) {
 	type Test struct {
 		data    Data
@@ -288,18 +361,9 @@ func Test_Data_runFilter(t *testing.T) {
 		{
 			data: Data{
 				Headers: Headers{
-					{
-						name:   "a",
-						lenght: 1,
-					},
-					{
-						name:   "b",
-						lenght: 3,
-					},
-					{
-						name:   "c",
-						lenght: 3,
-					},
+					&Header{name: "a", lenght: 1},
+					&Header{name: "b", lenght: 3},
+					&Header{name: "c", lenght: 3},
 				},
 				Data: map[string]interface{}{
 					"a": []interface{}{int64(1), int64(2), int64(3)},
@@ -321,18 +385,9 @@ func Test_Data_runFilter(t *testing.T) {
 		}, {
 			data: Data{
 				Headers: Headers{
-					{
-						name:   "a",
-						lenght: 1,
-					},
-					{
-						name:   "b",
-						lenght: 3,
-					},
-					{
-						name:   "c",
-						lenght: 3,
-					},
+					&Header{name: "a", lenght: 1},
+					&Header{name: "b", lenght: 3},
+					&Header{name: "c", lenght: 3},
 				},
 				Data: map[string]interface{}{
 					"a": []interface{}{int64(1), int64(2), int64(3)},

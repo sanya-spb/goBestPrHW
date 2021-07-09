@@ -206,7 +206,7 @@ func (data *Data) filterData(ctx context.Context, rows *[]int, filter Filter) er
 	if data.rows == 0 {
 		return errors.New("Empty data!")
 	}
-	if rows == nil {
+	if *rows == nil {
 		return errors.New("Empty input rows!")
 	}
 	index := make(map[int]bool, len(*rows))
