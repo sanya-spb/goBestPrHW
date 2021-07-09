@@ -39,6 +39,19 @@ https://notes.eatonphil.com/database-basics.html
 
 ## Решение
 
+синтаксис такой:
+> select [ * | column [, ...] ] [ where <условие> ]
+
+условие это выражения вида:  
+> column <operator> value [<preposition> column <operator> value] [, ...]
+
+operator может быть либо ``&&`` - ИЛИ, либо ``||`` - И
+строковые значения следует заключать в ```"```, если они содержат пробел
+
+например:
+> select col1, col2, col3 where col1>10 || col2=3.14 && col3="in vino veritas"  
+> select col1, col2, col3 where col3>10 || col2=3.14 && col3=noname
+
 ```
 $ make help
  Choose a command run in goBestPrHW:
@@ -119,7 +132,7 @@ index girth height volume descr
 29    18    80     51.5   none             
 30    18    80     51     none             
 31    20.6  87     77     none             
-[csv-searcher]*> select index, height, volume, girth where index<4 or index>27 and height=80
+[csv-searcher]*> select index, height, volume, girth where index<4 || index>27 && height=80
 index height volume girth 
 28    80     58.3   17.9  
 29    80     51.5   18    
@@ -147,6 +160,6 @@ $ tail access.log
 2021/07/08 02:53:31 CMD: select *
 2021/07/08 02:54:10 CMD: select * where index=3
 2021/07/08 02:54:32 CMD: select * where index<4 or index>27
-2021/07/08 02:55:29 CMD: select index, height, volume, girth where index<4 or index>27 and height=80
+2021/07/08 02:55:29 CMD: select index, height, volume, girth where index<4 || index>27 && height=80
 2021/07/08 02:56:52 CMD: select err where nodata
 ```

@@ -401,17 +401,23 @@ func Test_Data_runFilter(t *testing.T) {
 				{
 					preposition: "",
 					columnName:  "a",
-					operator:    "=",
-					value:       int64(2),
+					operator:    ">",
+					value:       int64(1),
 				},
 				{
-					preposition: "or",
+					preposition: "||",
 					columnName:  "b",
 					operator:    "=",
 					value:       float64(1.0),
 				},
+				{
+					preposition: "&&",
+					columnName:  "c",
+					operator:    "=",
+					value:       "3",
+				},
 			},
-			wait: []int{0, 1},
+			wait: []int{2},
 		},
 	}
 

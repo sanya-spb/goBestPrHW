@@ -214,7 +214,7 @@ func (data *Data) filterData(ctx context.Context, rows *[]int, filter Filter) er
 		index[v] = true
 	}
 	switch filter.preposition {
-	case "and", "":
+	case "&&", "":
 		for _, row := range *rows {
 			select {
 			case <-ctx.Done():
@@ -287,7 +287,7 @@ func (data *Data) filterData(ctx context.Context, rows *[]int, filter Filter) er
 				}
 			}
 		}
-	case "or":
+	case "||":
 		for row := 0; row < data.rows; row++ {
 			select {
 			case <-ctx.Done():
