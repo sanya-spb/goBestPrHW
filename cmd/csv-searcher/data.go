@@ -197,7 +197,18 @@ func (data *Data) runFilter(ctx context.Context, rows *[]int, filters []Filter) 
 
 // filter data
 func (data *Data) filterData(ctx context.Context, rows *[]int, filter Filter) error {
-	// time.Sleep(1 * time.Second)
+	if filter == (Filter{}) {
+		return errors.New("Empty filter!")
+	}
+	if len(data.Headers) == 0 {
+		return errors.New("Empty headers!")
+	}
+	if data.rows == 0 {
+		return errors.New("Empty data!")
+	}
+	if rows == nil {
+		return errors.New("Empty input rows!")
+	}
 	index := make(map[int]bool, len(*rows))
 	for _, v := range *rows {
 		index[v] = true
