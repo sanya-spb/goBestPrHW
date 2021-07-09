@@ -96,6 +96,10 @@ func (data *Data) addRow(row []interface{}) error {
 		return errors.New("Columns in row not equal header")
 	}
 
+	if len(row) == 0 {
+		return nil
+	}
+
 	for key, value := range data.Headers {
 		if value.lenght < len(fmt.Sprint(row[key])) {
 			value.lenght = len(fmt.Sprint(row[key]))

@@ -53,19 +53,32 @@ $ make help
 ```
 
 ```
-$ make run
+$ make run 
 golangci-lint -c ./golangci-lint.yaml run
+go test -v -short github.com/sanya-spb/goBestPrHW/cmd/csv-searcher/
+=== RUN   Test_App_isDataLoaded
+--- PASS: Test_App_isDataLoaded (0.00s)
+=== RUN   Test_Data_GetAllHeaders
+--- PASS: Test_Data_GetAllHeaders (0.00s)
+=== RUN   Test_Data_SetHead
+--- PASS: Test_Data_SetHead (0.00s)
+=== RUN   Test_Data_isHeader
+--- PASS: Test_Data_isHeader (0.00s)
+=== RUN   Test_Data_addRow
+--- PASS: Test_Data_addRow (0.00s)
+PASS
+ok      github.com/sanya-spb/goBestPrHW/cmd/csv-searcher        (cached)
 GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build \
         -ldflags "-s -w \
         -X github.com/sanya-spb/goBestPrHW/pkg/version.version=v0.9.1 \
-        -X github.com/sanya-spb/goBestPrHW/pkg/version.commit=git-656626c \
-        -X github.com/sanya-spb/goBestPrHW/pkg/version.buildTime=2021-07-07_23:49:32 \
+        -X github.com/sanya-spb/goBestPrHW/pkg/version.commit=git-c79feee \
+        -X github.com/sanya-spb/goBestPrHW/pkg/version.buildTime=2021-07-09_04:34:50 \
         -X github.com/sanya-spb/goBestPrHW/pkg/version.copyright="sanya-spb"" \
         -o ./cmd/csv-searcher/csv-searcher ./cmd/csv-searcher/
 ./cmd/csv-searcher/csv-searcher -config ./data/config.toml
 Welcome to csv-searcher!
 Working directory: /home/sanya/Документы/@sanya/@gb/Go/Go.BestPr/goBestPrHW/cmd/csv-searcher
-Version: v0.9.1 [git-656626c@2021-07-07_23:49:32]
+Version: v0.9.1 [git-c79feee@2021-07-09_04:34:50]
 Copyright: sanya-spb
 
 [csv-searcher]*> 
