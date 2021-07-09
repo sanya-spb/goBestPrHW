@@ -1,0 +1,9 @@
+{
+    "_comment": "в JSON не предусмотрены комментарии",
+    "debug": false,
+    "batch": false,
+    "data_file": "./data/test1.csv",
+    "filter_timeout": 1000,
+    "log_access": "./access.log",
+    "log_errors": "./errors.log"
+}
