@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/sanya-spb/goBestPrHW/internal/config"
 	"github.com/sanya-spb/goBestPrHW/pkg/version"
@@ -132,7 +134,11 @@ func (app *App) cmdSELECT(expr string) error {
 	if len(filters) == 0 {
 		app.Data.selectAllData(cols)
 	} else {
-		app.Data.selectData(cols, filters)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(app.Config.FilterTimeout)*time.Millisecond)
+		defer cancel()
+		if err := app.Data.selectData(ctx, cols, filters); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -130,7 +131,7 @@ func (data *Data) selectHead(cols []string) {
 }
 
 // print row
-func (data *Data) selectAllRow(cols []string, row int) {
+func (data *Data) selectRow(cols []string, row int) {
 	for _, col := range cols {
 		for _, valH := range data.Headers {
 			if col == valH.name {
@@ -145,184 +146,221 @@ func (data *Data) selectAllRow(cols []string, row int) {
 func (data *Data) selectAllData(cols []string) {
 	data.selectHead(cols)
 	for ii := 0; ii < data.rows; ii++ {
-		data.selectAllRow(cols, ii)
+		data.selectRow(cols, ii)
 	}
 }
 
 // advanced version to get data with filter
-func (data *Data) selectData(cols []string, filters []Filter) {
+func (data *Data) selectData(ctx context.Context, cols []string, filters []Filter) error {
 	data.selectHead(cols)
 
-	filteredRows := make([]int, 0, data.rows)
+	rows := make([]int, 0, data.rows)
 	for ii := 0; ii < data.rows; ii++ {
-		filteredRows = append(filteredRows, ii)
+		rows = append(rows, ii)
 	}
-	for _, filter := range filters {
-		// fmt.Printf("DEBUG1: filteredRows=%v\n", filteredRows)
-		if err := data.filterData(&filteredRows, filter); err != nil {
-			lErr.Printf(err.Error())
-			return
+
+	if err := data.runFilter(ctx, &rows, filters); err != nil {
+		return err
+	}
+
+	sort.Slice(rows, func(i, j int) bool {
+		return rows[i] < rows[j]
+	})
+
+	for _, row := range rows {
+		data.selectRow(cols, row)
+	}
+	return nil
+}
+
+// run filters step by step (with timeout)
+func (data *Data) runFilter(ctx context.Context, rows *[]int, filters []Filter) error {
+	select {
+	case <-ctx.Done():
+		return errors.New("Context is done!")
+	default:
+		if len(filters) > 0 {
+			filter := filters[0]
+			filters := filters[1:]
+			if err := data.filterData(ctx, rows, filter); err != nil {
+				return err
+			}
+			if err := data.runFilter(ctx, rows, filters); err != nil {
+				return err
+			}
+		} else {
+			return nil
 		}
 	}
-	// fmt.Printf("DEBUG2: filteredRows=%v\n", filteredRows)
-	for _, row := range filteredRows {
-		data.selectAllRow(cols, row)
-	}
+	return nil
 }
 
 // filter data
-func (data *Data) filterData(sourceRows *[]int, filter Filter) error {
-	index := make(map[int]bool, len(*sourceRows))
-	for _, v := range *sourceRows {
+func (data *Data) filterData(ctx context.Context, rows *[]int, filter Filter) error {
+	// time.Sleep(1 * time.Second)
+	index := make(map[int]bool, len(*rows))
+	for _, v := range *rows {
 		index[v] = true
 	}
 	switch filter.preposition {
 	case "and", "":
-		for _, row := range *sourceRows {
-			switch t := data.Data[filter.columnName].([]interface{})[row].(type) {
-			case string:
-				if fmt.Sprintf("%T", filter.value) == "string" {
-					switch filter.operator {
-					case "=":
-						if !(t == filter.value.(string)) {
-							index[row] = false
+		for _, row := range *rows {
+			select {
+			case <-ctx.Done():
+				return errors.New("Context is done!")
+			default:
+				switch t := data.Data[filter.columnName].([]interface{})[row].(type) {
+				case string:
+					if fmt.Sprintf("%T", filter.value) == "string" {
+						switch filter.operator {
+						case "=":
+							if !(t == filter.value.(string)) {
+								index[row] = false
+							}
+						case ">":
+							if !(t > filter.value.(string)) {
+								index[row] = false
+							}
+						case "<":
+							if !(t < filter.value.(string)) {
+								index[row] = false
+							}
+						default:
+							return errors.New("undefined operator!")
 						}
-					case ">":
-						if !(t > filter.value.(string)) {
-							index[row] = false
-						}
-					case "<":
-						if !(t < filter.value.(string)) {
-							index[row] = false
-						}
-					default:
-						return errors.New("undefined operator!")
+					} else {
+						index[row] = false
 					}
-				} else {
-					index[row] = false
-				}
-			case int64:
-				if fmt.Sprintf("%T", filter.value) == "int64" {
-					switch filter.operator {
-					case "=":
-						if !(t == filter.value.(int64)) {
-							index[row] = false
+				case int64:
+					if fmt.Sprintf("%T", filter.value) == "int64" {
+						switch filter.operator {
+						case "=":
+							if !(t == filter.value.(int64)) {
+								index[row] = false
+							}
+						case ">":
+							if !(t > filter.value.(int64)) {
+								index[row] = false
+							}
+						case "<":
+							if !(t < filter.value.(int64)) {
+								index[row] = false
+							}
+						default:
+							return errors.New("undefined operator!")
 						}
-					case ">":
-						if !(t > filter.value.(int64)) {
-							index[row] = false
-						}
-					case "<":
-						if !(t < filter.value.(int64)) {
-							index[row] = false
-						}
-					default:
-						return errors.New("undefined operator!")
+					} else {
+						index[row] = false
 					}
-				} else {
-					index[row] = false
-				}
-			case float64:
-				if fmt.Sprintf("%T", filter.value) == "float64" {
-					switch filter.operator {
-					case "=":
-						if !(t == filter.value.(float64)) {
-							index[row] = false
+				case float64:
+					if fmt.Sprintf("%T", filter.value) == "float64" {
+						switch filter.operator {
+						case "=":
+							if !(t == filter.value.(float64)) {
+								index[row] = false
+							}
+						case ">":
+							if !(t > filter.value.(float64)) {
+								index[row] = false
+							}
+						case "<":
+							if !(t < filter.value.(float64)) {
+								index[row] = false
+							}
+						default:
+							return errors.New("undefined operator!")
 						}
-					case ">":
-						if !(t > filter.value.(float64)) {
-							index[row] = false
-						}
-					case "<":
-						if !(t < filter.value.(float64)) {
-							index[row] = false
-						}
-					default:
-						return errors.New("undefined operator!")
+					} else {
+						index[row] = false
 					}
-				} else {
-					index[row] = false
 				}
 			}
 		}
 	case "or":
 		for row := 0; row < data.rows; row++ {
-			switch t := data.Data[filter.columnName].([]interface{})[row].(type) {
-			case string:
-				if fmt.Sprintf("%T", filter.value) == "string" {
-					switch filter.operator {
-					case "=":
-						if t == filter.value.(string) {
-							index[row] = true
+			select {
+			case <-ctx.Done():
+				return errors.New("Context is done!")
+			default:
+				switch t := data.Data[filter.columnName].([]interface{})[row].(type) {
+				case string:
+					if fmt.Sprintf("%T", filter.value) == "string" {
+						switch filter.operator {
+						case "=":
+							if t == filter.value.(string) {
+								index[row] = true
+							}
+						case ">":
+							if t > filter.value.(string) {
+								index[row] = true
+							}
+						case "<":
+							if t < filter.value.(string) {
+								index[row] = true
+							}
+						default:
+							return errors.New("undefined operator!")
 						}
-					case ">":
-						if t > filter.value.(string) {
-							index[row] = true
-						}
-					case "<":
-						if t < filter.value.(string) {
-							index[row] = true
-						}
-					default:
-						return errors.New("undefined operator!")
+					} else {
+						index[row] = false
 					}
-				} else {
-					index[row] = false
-				}
-			case int64:
-				if fmt.Sprintf("%T", filter.value) == "int64" {
-					switch filter.operator {
-					case "=":
-						if t == filter.value.(int64) {
-							index[row] = true
+				case int64:
+					if fmt.Sprintf("%T", filter.value) == "int64" {
+						switch filter.operator {
+						case "=":
+							if t == filter.value.(int64) {
+								index[row] = true
+							}
+						case ">":
+							if t > filter.value.(int64) {
+								index[row] = true
+							}
+						case "<":
+							if t < filter.value.(int64) {
+								index[row] = true
+							}
+						default:
+							return errors.New("undefined operator!")
 						}
-					case ">":
-						if t > filter.value.(int64) {
-							index[row] = true
-						}
-					case "<":
-						if t < filter.value.(int64) {
-							index[row] = true
-						}
-					default:
-						return errors.New("undefined operator!")
+					} else {
+						index[row] = false
 					}
-				} else {
-					index[row] = false
-				}
-			case float64:
-				if fmt.Sprintf("%T", filter.value) == "float64" {
-					switch filter.operator {
-					case "=":
-						if t == filter.value.(float64) {
-							index[row] = true
+				case float64:
+					if fmt.Sprintf("%T", filter.value) == "float64" {
+						switch filter.operator {
+						case "=":
+							if t == filter.value.(float64) {
+								index[row] = true
+							}
+						case ">":
+							if t > filter.value.(float64) {
+								index[row] = true
+							}
+						case "<":
+							if t < filter.value.(float64) {
+								index[row] = true
+							}
+						default:
+							return errors.New("undefined operator!")
 						}
-					case ">":
-						if t > filter.value.(float64) {
-							index[row] = true
-						}
-					case "<":
-						if t < filter.value.(float64) {
-							index[row] = true
-						}
-					default:
-						return errors.New("undefined operator!")
+					} else {
+						index[row] = false
 					}
-				} else {
-					index[row] = false
 				}
 			}
 		}
 	}
-	result := make([]int, 0, len(*sourceRows))
+	result := make([]int, 0, len(*rows))
 	for k, v := range index {
-		if v {
-			result = append(result, k)
+		select {
+		case <-ctx.Done():
+			return errors.New("Context is done!")
+		default:
+			if v {
+				result = append(result, k)
+			}
 		}
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i] < result[j]
-	})
-	*sourceRows = result
+	*rows = result
 	return nil
 }
