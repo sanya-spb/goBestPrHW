@@ -85,6 +85,12 @@ func string2Interface(value string, base int, bitSize int) interface{} {
 	} else if f64, err := strconv.ParseFloat(value, bitSize); err == nil {
 		result = f64
 	} else {
+		if len(value) > 0 && value[0] == '"' {
+			value = value[1:]
+		}
+		if len(value) > 0 && value[len(value)-1] == '"' {
+			value = value[:len(value)-1]
+		}
 		result = value
 	}
 	return result

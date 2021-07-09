@@ -104,8 +104,8 @@ func (app *App) cmdSELECT(expr string) error {
 		}
 		if len(splitExpr) == 2 {
 			sWhere := splitExpr[1]
-			re1 := regexp.MustCompile(`(\s*(and|or){0,1}\s*(\w+\s*[><=]\s*[\w\"\.]+)\s*){1}`)
-			re2 := regexp.MustCompile(`\s*(and|or){0,1}\s*(\w+)\s*([><=])\s*([\w\"\.]+)\s*`)
+			re1 := regexp.MustCompile(`(\s*(and|or){0,1}\s*(\w+\s*[><=]\s*[\w\"\.\s]+)\s*){1}`)
+			re2 := regexp.MustCompile(`\s*(and|or){0,1}\s*(\w+)\s*([><=])\s*([\w\"\.\s]+)\s*`)
 			for _, val := range re1.FindAllString(sWhere, -1) {
 				for _, val2 := range re2.FindAllString(val, -1) {
 					ff := re2.FindAllStringSubmatch(val2, -1)
